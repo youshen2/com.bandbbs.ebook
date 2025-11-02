@@ -1,7 +1,7 @@
 <template>
 	<div class="page">
 	  <scroll id="scrollId"
-		style="position: absolute; width: 336px; height: {{scrollHeight}}px; top: {{verticalMargin}}px;"
+		style="position: absolute; width: 432px; height: {{scrollHeight}}px; top: {{verticalMargin}}px;"
 		scroll-y="{{true}}"
 		scroll-top="{{scrollTopValue}}"
 		@scroll="onScroll"
@@ -10,34 +10,34 @@
 		@click="onTxtClick"
 		onlongpress="onTxtLongPress"
 		>
-		<div id="contentContainer" style="position: absolute; width:336px; flex-direction: column;">
+		<div id="contentContainer" style="position: absolute; width:432px; flex-direction: column;">
 			<div if="{{isAtChapterStart && !showSetting && currentChapterIndexInAll > 0}}" style="width: 100%; height: 80px; justify-content: center; align-items: center;" @click="goToPrevChapter">
 				<text style="color: #aaa; font-size: 28px; font-weight: bold;">上一章</text>
 			</div>
 		  <div id="page1" style="flex-direction: column; width: 100%; flex-shrink: 0;">
-			<text style="width: 336px; text-align: left; color: rgba(255,255,255,{{opacity/100}}); font-size: {{fontSize}}px; font-weight: bold; line-height: {{lineHeight}}px; ">{{ page1.lines.join('\n') }}</text>
+			<text style="width: 432px; text-align: left; color: rgba(255,255,255,{{opacity/100}}); font-size: {{fontSize}}px; font-weight: bold; line-height: {{lineHeight}}px; ">{{ page1.lines.join('\n') }}</text>
 		  </div>
 		  <div id="page2" if="{{page2}}" style="flex-direction: column; width: 100%; flex-shrink: 0;">
-			<text style="width: 336px; text-align: left; color: rgba(255,255,255,{{opacity/100}}); font-size: {{fontSize}}px; font-weight: bold; line-height: {{lineHeight}}px; ">{{ page2.lines.join('\n') }}</text>
+			<text style="width: 432px; text-align: left; color: rgba(255,255,255,{{opacity/100}}); font-size: {{fontSize}}px; font-weight: bold; line-height: {{lineHeight}}px; ">{{ page2.lines.join('\n') }}</text>
 		  </div>
 			<div if="{{isAtChapterEnd && !showSetting && currentChapterIndexInAll < allChapters.length - 1}}" style="width: 100%; height: 80px; justify-content: center; align-items: center;" @click="goToNextChapter">
 				<text style="color: #aaa; font-size: 28px; font-weight: bold;">下一章</text>
 			</div>
 		</div>
 	  </scroll>
-		<img show="{{showSetting}}" src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 336px;height: 102px;" />
-		<img show="{{showSetting}}" src="/common/images/back.png" @click="back" style="position: absolute;left: 6px;top: 6px;width: 72px;height: 72px;"/>
-		<img show="{{showSetting}}" src="/common/images/more.png" @click="gotoSetting" style="position: absolute;left: 258px;top: 6px;width: 72px;height: 72px;"/>
-		<text show="{{showSetting}}" style="position: absolute;left: 78px;top: 7px;width: 180px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+		<img show="{{showSetting}}" src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 102px;" />
+		<img show="{{showSetting}}" src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+		<img show="{{showSetting}}" src="/common/images/more.png" @click="gotoSetting" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
+		<text show="{{showSetting}}" style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 			{{nowTime}}
 		</text>
-		<marquee scrollamount="50" show="{{showSetting}}" style="position: absolute;left: 78px;top: 35px;width: 180px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		<marquee scrollamount="50" text-offset="10" show="{{showSetting}}" style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 			{{currentChapterName}}
 		</marquee>
 
-		<img show="{{showSetting}}" src="/common/images/bt.png" style="position: absolute;left: 0px;top: 378px;width: 336px;height: 102px;" />
-        <img show="{{showSetting}}" src="{{ isKeepScreenOn ? '/common/images/brightness.png' : '/common/images/brightness_off.png' }}" @click="toggleKeepScreenOn" style="position: absolute;left: 6px;top: 402px;width: 72px;height: 72px;"/>
-		<div show="{{showSetting}}" style="position: absolute; top: 402px; left: 78px; width: 180px; height: 72px; flex-direction: column; justify-content: flex-start; align-items: center;">
+		<img show="{{showSetting}}" src="/common/images/bt.png" style="position: absolute;left: 0px;top: 412px;width: 432px;height: 102px;" />
+        <img show="{{showSetting}}" src="{{ isKeepScreenOn ? '/common/images/brightness.png' : '/common/images/brightness_off.png' }}" @click="toggleKeepScreenOn" style="position: absolute;left: 38px;top: 408px;width: 82px;height: 82px;"/>
+		<div show="{{showSetting}}" style="position: absolute; top: 426px; left: 130px; width: 172px; height: 82px; flex-direction: column; justify-content: flex-start; align-items: center;">
 			<text style="line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 				{{currentPage}} / {{totalPages}}
 			</text>
@@ -45,7 +45,7 @@
 				阅读进度
 			</text>
 		</div>
-        <img show="{{showSetting}}" src="/common/images/add_bookmark.png" @click="addBookmark" @longpress="gotoBookmarks" style="position: absolute;left: 258px;top: 402px;width: 72px;height: 72px;"/>
+        <img show="{{showSetting}}" src="/common/images/add_bookmark.png" @click="addBookmark" @longpress="gotoBookmarks" style="position: absolute;left: 322px;top: 408px;width: 82px;height: 82px;"/>
 		
 		<div if="{{showProgressBar && !showSetting}}" class="progress-bar-container" style="height: {{progressBarHeight}}px;">
 			<progress class="p1" percent="{{chapterProgress}}" style="width: 100%;color: #E1DDDD;stroke-width: {{progressBarHeight}}px;layer-color: #00000000;"></progress>
@@ -71,9 +71,9 @@
 		txtSizePage: 400,
 		fontSize: 30,
 		lineHeight: 34,
-		pageHeigh: 480,
+		pageHeigh: 514,
 		verticalMargin: 10,
-		scrollHeight: 480,
+		scrollHeight: 514,
 		showSetting: true,
 		loadingNext: false,
 		loadingPrev: false,
@@ -174,7 +174,7 @@
 		storage.get({ key: 'EBOOK_GESTURE', success: (data) => { if (data) this.gestureMode = data; }, fail: () => { this.gestureMode = 'single'; } });
 	},
 	updateScrollHeight() {
-		this.scrollHeight = 480 - this.verticalMargin * 2;
+		this.scrollHeight = 514 - this.verticalMargin * 2;
 		this.pageHeigh = Math.floor(this.scrollHeight/this.lineHeight) * this.lineHeight;
 	},
 	async loadBook() {
@@ -928,15 +928,15 @@
 
 <style>
 .page {
-	width: 336px;
-	height: 480px;
+	width: 432px;
+	height: 514px;
 	background-color: #000000;
 }
 .progress-bar-container {
 	position: absolute;
 	bottom: 0px;
 	left: 0px;
-	width: 336px;
+	width: 432px;
 	padding: 0 6px;
 }
 </style>

@@ -8,33 +8,33 @@
 			  共 {{totalChapters}} 章
 		  </text>
 	  </div>
-	  <div class="row" style="top:209px">
+	  <div class="row" style="top:237px">
 		  <img src="/common/images/num_pad/7.png" @click="onClick('7')"/>
 		  <img src="/common/images/num_pad/8.png" @click="onClick('8')"/>
 		  <img src="/common/images/num_pad/9.png" @click="onClick('9')"/>
 	  </div>
-	  <div class="row" style="top:276px">
+	  <div class="row" style="top:304px">
 		  <img src="/common/images/num_pad/4.png" @click="onClick('4')"/>
 		  <img src="/common/images/num_pad/5.png" @click="onClick('5')"/>
 		  <img src="/common/images/num_pad/6.png" @click="onClick('6')"/>
 	  </div>
-	  <div class="row" style="top:343px">
+	  <div class="row" style="top:371px">
 		  <img src="/common/images/num_pad/1.png" @click="onClick('1')"/>
 		  <img src="/common/images/num_pad/2.png" @click="onClick('2')"/>
 		  <img src="/common/images/num_pad/3.png" @click="onClick('3')"/>
 	  </div>
-	  <div class="row" style="top:410px">
+	  <div class="row" style="top:438px">
 		  <img src="/common/images/num_pad/0.png" @click="onClick('0')"/>
 		  <img src="/common/images/num_pad/del.png" @click="onClick('del')"/>
 	  </div>
   
   
-	  <img static src="/common/images/back.png" @click="back" style="position: absolute;left: 6px;top: 6px;width: 72px;height: 72px;"/>
-	  <img static src="/common/images/conform.png" @click="onClick('conform')" style="position: absolute;left: 258px;top: 6px;width: 72px;height: 72px;"/>
-	  <text style="position: absolute;left: 78px;top: 7px;width: 180px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+	  <img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+	  <img static src="/common/images/conform.png" @click="onClick('conform')" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
+	  <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 		{{nowTime}}
 	  </text>
-	  <text style="position: absolute;left: 78px;top: 35px;width: 180px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+	  <text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 		  跳转章节
 	  </text>
 	</div>
@@ -172,13 +172,13 @@
   
   <style>
   .page {
-	  width: 336px;
-	  height: 480px;
+	  width: 432px;
+	  height: 514px;
 	  background-color: #000000;
   }
   
   .more-info {
-	width: 335px;
+	width: 431px;
 	background-color: rgb(0,0,0);
   }
   
@@ -193,7 +193,7 @@
   }
   
   .list {
-	  width: 336px;
+	  width: 432px;
 	  height: 400px;
 	  position: absolute;
 	  top:72px;
@@ -201,9 +201,9 @@
   
   .item {
 	  position: absolute;
-	  left: 6px;
-	  top: 86px;
-	  width: 324px;
+	  left: 27px;
+	  top: 114px;
+	  width: 378px;
 	  height: 115px;
 	  border-radius: 36px;
 	  flex-direction: column;
@@ -228,8 +228,9 @@
   
   .row {
 	  position:absolute;
-	  width:336px;
-	  height:64px;
+	  left: 32px;
+	  width:368px;
+	  height:67px;
 	  padding:0px 6px;
 	  justify-content: space-between;
   }

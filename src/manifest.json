@@ -1,7 +1,7 @@
 {
   "package": "com.bandbbs.ebook.plus",
   "name": "电子书",
-  "versionName": "4.2.1",
+  "versionName": "4.2.1.RW",
   "versionCode": 251103,
   "minPlatformVersion": 1100,
   "icon": "/common/logo.png",
@@ -52,7 +52,7 @@
   ],
   "config": {
     "logLevel": "log",
-    "designWidth": 336
+    "designWidth": 432
   },
   "router": {
     "entry": "pages/index",

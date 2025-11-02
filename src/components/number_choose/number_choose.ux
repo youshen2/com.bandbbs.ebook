@@ -1,11 +1,11 @@
 <template>
     <div show="{{display}}" class="number_choose" style="{{style}}">
-        <img static onclick="minus" onlongpress="minusL" ontouchend="end" src="/common/images/minis.png" style="position: absolute;left: 6px;width: 72px;height: 72px;"/>
-		<img static onclick="add" onlongpress="addL" ontouchend="end" src="/common/images/plus.png" style="position: absolute;left: 258px;width: 72px;height: 72px;"/>
-		<text style="position: absolute;left: 78px;top: 39px;width: 180px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+        <img static onclick="minus" onlongpress="minusL" ontouchend="end" src="/common/images/minis.png" style="position: absolute;left: 38px;width: 82px;height: 82px;"/>
+		<img static onclick="add" onlongpress="addL" ontouchend="end" src="/common/images/plus.png" style="position: absolute;left: 322px;width: 82px;height: 82px;"/>
+		<text style="position: absolute;left: 130px;top: 39px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 			{{ value + unit }}
 		</text>
-		<text style="position: absolute;left: 78px;top: 1px;width: 180px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		<text style="position: absolute;left: 130px;top: 1px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 			{{ name }}
 		</text>
     </div>
@@ -72,6 +72,6 @@ export default {
 <style>
 .number_choose {
 	width: 100%;
-	height: 72px;
+	height: 82px;
 }
 </style>

@@ -1,10 +1,10 @@
 <import name="input-method" src="../../components/InputMethod/InputMethod.ux"></import>
 <template>
     <div class="page">
-        <img static src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 336px;height: 102px;" />
-        <img static src="/common/images/back.png" @click="back" style="position: absolute;left: 6px;top: 6px;width: 72px;height: 72px;"/>
-        <img static src="/common/images/conform.png" @click="save" style="position: absolute;left: 258px;top: 6px;width: 72px;height: 72px;"/>
-        <text style="position: absolute;left: 78px;top: 35px;width: 180px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+        <img static src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 102px;" />
+        <img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+        <img static src="/common/images/conform.png" @click="save" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
+        <text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
             编辑名称
         </text>
 
@@ -95,16 +95,16 @@ export default {
 
 <style>
 .page {
-    width: 336px;
-    height: 480px;
+    width: 432px;
+    height: 514px;
     background-color: #000000;
     flex-direction: column;
 }
 .input-container {
     position: absolute;
-    top: 100px;
-    left: 20px;
-    width: 296px;
+    top: 120px;
+    left: 27px;
+    width: 378px;
     flex-direction: column;
 }
 .input-display {

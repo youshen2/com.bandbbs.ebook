@@ -81,7 +81,7 @@
 			that.updateScene();
 		  },
 		  fail: function(data, code) {
-            that.onSelect=1
+            that.onSelect=2
 		  }
 	  })
 	},

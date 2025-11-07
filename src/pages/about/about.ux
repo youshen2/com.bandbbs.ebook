@@ -1,15 +1,15 @@
 <template>
 	<div class="page">
-    <scroll scroll-y="{{true}}" bounces="{{true}}" style="position: absolute;width: 336px;height: 480px;">
-      <img src="/common/images/about_img.png" style="width: 100%;"/>
+    <scroll scroll-y="{{true}}" bounces="{{true}}" style="position: absolute;width: 432px;height: 514px;">
+      <img src="/common/images/about_img.png" style="width: 100%;position: absolute;left: 48px;top: 40px;"/>
 
-      <text style="position: absolute;left: 74px;top: 102px;width: 282px;height: 48px;font-size: 36px;font-weight: bold;color: #FFFFFF;">
+      <text style="position: absolute;left: 74px;top: 142px;width: 282px;height: 48px;font-size: 36px;font-weight: bold;color: #FFFFFF;">
         弦{{appName}}
       </text>
-      <text style="position: absolute;left: 74px;top: 144px;width: 204px;height: 48px;font-size: 36px;font-weight: bold;color: rgba(255, 255, 255, 0.6);">
+      <text style="position: absolute;left: 74px;top: 184px;width: 204px;height: 48px;font-size: 36px;font-weight: bold;color: rgba(255, 255, 255, 0.6);">
         {{displayVersion}}
       </text>
-      <text style="position: absolute;left: 74px;top: 186px;width: 282px;height: 36px;font-size: 24px;font-weight: bold;color: rgba(255, 255, 255, 0.4);">
+      <text style="position: absolute;left: 74px;top: 226px;width: 282px;height: 36px;font-size: 24px;font-weight: bold;color: rgba(255, 255, 255, 0.4);">
         {{versionType}}
       </text>
     </scroll>

@@ -1,22 +1,29 @@
+<import name="number" src="../../components/number_choose/number_choose"></import>
 <template>
 	<div class="page" style="flex-direction: column;">
-		<div class="setting-group">
-			<div class="setting-item">
-				<text class="label">滑动灵敏度</text>
-				<div class="number-adjuster">
-					<div class="btn" @click="decrease('sensitivity')">-</div>
-					<text class="value">{{ chapterSwitchSensitivity }}</text>
-					<div class="btn" @click="increase('sensitivity')">+</div>
-				</div>
-			</div>
-		</div>
+	  <div class="preview-container">
+		  <div class="preview-screen">
+			  <div class="content-area">
+				  <text class="preview-text">
+					  越界换章
+				  </text>
+			  </div>
+		  </div>
+		  <div class="info-panel">
+			  <text class="info-title">滑动灵敏度</text>
+			  <text class="info-value">{{ chapterSwitchSensitivity }}</text>
+			  <text class="info-desc">滑动多长的距离触发换章</text>
+		  </div>
+	  </div>
+	  
+	  <number style="position: absolute;top:415px;" max="240" min="10" step="10" value="{{ chapterSwitchSensitivity }}" @change="change" name="调整灵敏度"></number>
 
-		<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 6px;top: 6px;width: 72px;height: 72px;"/>
-		<img static src="/common/images/info.png" @click="routerTo('info')" style="position: absolute;left: 258px;top: 6px;width: 72px;height: 72px;"/>
-		<text style="position: absolute;left: 78px;top: 7px;width: 180px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+		<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+		<img static src="/common/images/reset.png" @click="reset" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
+		<text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 		  {{nowTime}}
 		</text>
-		<text style="position: absolute;left: 78px;top: 35px;width: 180px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		<text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 			越界换章
 		</text>
 	</div>
@@ -25,53 +32,73 @@
 <script>
 import router from '@system.router'
 import storage from '../../common/storage.js'
-import app from '@system.app'
-import prompt from '@system.prompt'
+
+const SENSITIVITY_KEY = 'EBOOK_CHAPTER_SWITCH_SENSITIVITY';
+const DEFAULT_SENSITIVITY = 50;
 
 export default {
 	private: {
 		nowTime: "00:00",
 		timer: null,
-		chapterSwitchSensitivity: 50,
+		chapterSwitchSensitivity: DEFAULT_SENSITIVITY,
+        timeFormat: '24h'
 	},
 	updateTime() {
 		const date = new Date();
 		let hours = date.getHours();
 		let minutes = date.getMinutes();
-		hours = hours < 10 ? '0' + hours : hours;
-		minutes = minutes < 10 ? '0' + minutes : minutes;
-		this.nowTime = `${hours}:${minutes}`;
+        if (this.timeFormat === '12h') {
+          let ampm = hours >= 12 ? '下午' : '上午';
+          hours = hours % 12;
+          hours = hours ? hours : 12; 
+          minutes = minutes < 10 ? '0' + minutes : minutes;
+          this.nowTime = `${ampm} ${hours}:${minutes}`;
+      } else {
+          hours = hours < 10 ? '0' + hours : hours;
+          minutes = minutes < 10 ? '0' + minutes : minutes;
+          this.nowTime = `${hours}:${minutes}`;
+      }
 	},
 	onInit() {
-		this.updateTime();
-		this.timer = setInterval(() => { this.updateTime(); }, 1000);
-		this.loadSettings();
+        storage.get({
+            key: 'EBOOK_TIME_FORMAT',
+            success: (data) => {
+                if(data) this.timeFormat = data;
+                this.updateTime();
+            },
+            fail: () => {
+                this.updateTime();
+            }
+        });
+		this.timer = setInterval(() => {
+			this.updateTime();
+		}, 1000);
+
+		storage.get({
+			key: SENSITIVITY_KEY,
+			success: (data) => {
+				if (data) {
+					this.chapterSwitchSensitivity = parseInt(data);
+				}
+			},
+		});
 	},
 	onDestroy(){
 		clearInterval(this.timer);
-		this.saveSettings();
 	},
-	loadSettings() {
-		storage.get({ key: 'EBOOK_CHAPTER_SWITCH_SENSITIVITY', success: (data) => { if (data) this.chapterSwitchSensitivity = parseInt(data); } });
+	change(e) {
+		this.chapterSwitchSensitivity = e.detail.value;
+		storage.set({
+			key: SENSITIVITY_KEY,
+			value: this.chapterSwitchSensitivity.toString(),
+		});
 	},
-	saveSettings() {
-		storage.set({ key: 'EBOOK_CHAPTER_SWITCH_SENSITIVITY', value: this.chapterSwitchSensitivity.toString() });
-		prompt.showToast({ message: '设置已保存', duration: 1000 });
-	},
-	increase(type) {
-		if (type === 'sensitivity') {
-			if(this.chapterSwitchSensitivity < 240) this.chapterSwitchSensitivity = Math.min(240, this.chapterSwitchSensitivity + 10);
-		}
-	},
-	decrease(type) {
-		if (type === 'sensitivity') {
-			if(this.chapterSwitchSensitivity > 10) this.chapterSwitchSensitivity = Math.max(10, this.chapterSwitchSensitivity - 10);
-		}
-	},
-	routerTo(url) {
-	  router.push({
-		uri: '/pages/' + url
-	  })
+	reset() {
+		this.chapterSwitchSensitivity = DEFAULT_SENSITIVITY;
+		storage.set({
+			key: SENSITIVITY_KEY,
+			value: this.chapterSwitchSensitivity.toString(),
+		});
 	},
 	back(){
 		router.back();
@@ -81,58 +108,80 @@ export default {
 
 <style>
 .page {
-	width: 336px;
-	height: 480px;
+	width: 432px;
+	height: 514px;
 	background-color: #000000;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	padding: 86px 6px;
 }
 
-.setting-group {
-	width: 100%;
-	padding: 0 20px;
-}
-
-.setting-item {
-	width: 100%;
-	height: 112px;
-	padding: 14px 20px;
-	margin-bottom: 8px;
-	background-color: #262626;
-	border-radius: 36px;
-	align-items: center;
-	justify-content: space-between;
-}
-
-.label {
-	font-size: 28px;
-	color: white;
-	font-weight: bold;
-}
-
-.number-adjuster {
+.preview-container {
+	position: absolute;
+	left: 54px;
+	top: 86px;
+	width: 324px;
+	height: 280px;
 	flex-direction: row;
+	justify-content: space-between;
 	align-items: center;
+	padding: 10px;
 }
 
-.btn {
-	width: 60px;
-	height: 60px;
-	background-color: #333;
+.preview-screen {
+	width: 144px;
+	height: 171px;
+	background-color: #1a1a1a;
+	border-radius: 20px;
+	border: 3px solid #333333;
+	flex-direction: column;
+	overflow: hidden;
+	position: relative;
+}
+
+.content-area {
+	flex: 1;
+	width: 100%;
+	background-color: #262626;
+	align-items: center;
+	justify-content: center;
+	padding: 8px;
+}
+
+.preview-text {
+	font-size: 20px;
+	font-weight: bold;
 	color: white;
 	text-align: center;
-	line-height: 60px;
-	font-size: 40px;
-	border-radius: 30px;
-	margin: 0 10px;
+	lines: 3;
+	text-overflow: ellipsis;
 }
 
-.value {
-	font-size: 32px;
+.info-panel {
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	margin-left: 10px;
+}
+
+.info-title {
+	font-size: 28px;
+	font-weight: bold;
 	color: white;
-	width: 60px;
+	line-height: 38px;
+	margin-bottom: 6px;
+}
+
+.info-value {
+	font-size: 48px;
+	font-weight: bold;
+	color: #0D6EFF;
+	line-height: 56px;
+	margin-bottom: 10px;
+}
+
+.info-desc {
+	font-size: 22px;
+	color: rgba(255,255,255,0.6);
+	line-height: 30px;
 	text-align: center;
 }
 </style>

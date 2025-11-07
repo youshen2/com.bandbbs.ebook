@@ -40,15 +40,15 @@
     <img static src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 102px;" />
     <img static src="/common/images/back.png" @click="exit" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
     <img static src="/common/images/more.png" @click="routerTo('more')" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
-    <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:26px;color:rgba(255,255,255,0.6);text-align:center;">
+    <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
       {{nowTime}}
     </text>
-    <text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:36px;color:white;text-align:center;">
+    <text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
       电子书
     </text>
 
     <img if="{{allBooks.length == 0}}" src="/common/images/push.png" 
-      style="position: absolute;left: 348px;top: 430px;width: 72px;height: 72px;" @click="routerTo('push')"/>
+      style="position: absolute;left: 308px;top: 420px;width: 82px;height: 82px;" @click="routerTo('push')"/>
 	</div>
 </template>
 
@@ -106,20 +106,20 @@ export default {
         key: 'EBOOK_SHELF_PAGE_SIZE',
         success: (data) => {
             if (data) that.pageSize = parseInt(data);
-            else that.pageSize = 6;
+            else that.pageSize = 12;
         },
         fail: () => {
-            that.pageSize = 6;
+            that.pageSize = 12;
         }
       });
       storage.get({
           key: 'EBOOK_SHELF_STYLE',
           success: (data) => {
               if (data) that.shelfStyle = data;
-              else that.shelfStyle = 'list';
+              else that.shelfStyle = 'cover';
           },
           fail: () => {
-              that.shelfStyle = 'list';
+              that.shelfStyle = 'cover';
           },
           complete: () => {
               that.loadFileList();

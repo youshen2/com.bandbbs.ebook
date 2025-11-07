@@ -6,17 +6,17 @@
 				调整阅读器页面中的“上一章”和“下一章”按钮的高度和触发灵敏度。
 			</text>
 		</div>
-		<number style="position: absolute;bottom:84px" max="200" min="0" step="5" unit="px" value="{{scrollSensitivity}}" @change="onSensitivityChange" name="触发灵敏度">
+		<number style="position: absolute;top:323px;" max="200" min="0" step="5" unit="px" value="{{scrollSensitivity}}" @change="onSensitivityChange" name="触发灵敏度">
 		</number>
-		<number style="position: absolute;bottom:6px" max="200" min="25" step="5" unit="px" value="{{buttonHeight}}" @change="onHeightChange" name="按钮高度">
+		<number style="position: absolute;top:415px;" max="200" min="25" step="5" unit="px" value="{{buttonHeight}}" @change="onHeightChange" name="按钮高度">
 		</number>
 
-		<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 6px;top: 6px;width: 72px;height: 72px;"/>
-		<img static src="/common/images/reset.png" @click="reset" style="position: absolute;left: 258px;top: 6px;width: 72px;height: 72px;"/>
-		<text style="position: absolute;left: 78px;top: 7px;width: 180px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+		<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+		<img static src="/common/images/reset.png" @click="reset" style="position: absolute;left: 332px;top: 24px;width: 82px;height: 82px;"/>
+		<text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 		  {{nowTime}}
 		</text>
-		<text style="position: absolute;left: 78px;top: 35px;width: 180px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		<text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 			翻章按钮
 		</text>
 	</div>
@@ -105,17 +105,17 @@ export default {
 
 <style>
 .page {
-	width: 336px;
-	height: 480px;
+	width: 432px;
+	height: 514px;
 	background-color: #000000;
 }
 
 .item {
 	position: absolute;
-	left: 6px;
-	top: 86px;
-	width: 324px;
-	height: 228px;
+	left: 20px;
+	top: 126px;
+	width: 392px;
+	height: 178px;
 	border-radius: 36px;
 	flex-direction: column;
 	border: 3px solid #262626;

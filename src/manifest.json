@@ -88,6 +88,9 @@
       "pages/marginSetting": {
         "component": "marginSetting"
       },
+      "pages/chapterSwitchSensitivity": {
+        "component": "chapterSwitchSensitivity"
+      },
       "pages/push": {
         "component": "push"
       },

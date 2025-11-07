@@ -8,17 +8,17 @@
 			  共 {{totalChapters}} 章
 		  </text>
 	  </div>
-	  <div class="row" style="top:237px">
+	  <div class="row" style="top:228px">
 		  <img src="/common/images/num_pad/7.png" @click="onClick('7')"/>
 		  <img src="/common/images/num_pad/8.png" @click="onClick('8')"/>
 		  <img src="/common/images/num_pad/9.png" @click="onClick('9')"/>
 	  </div>
-	  <div class="row" style="top:304px">
+	  <div class="row" style="top:298px">
 		  <img src="/common/images/num_pad/4.png" @click="onClick('4')"/>
 		  <img src="/common/images/num_pad/5.png" @click="onClick('5')"/>
 		  <img src="/common/images/num_pad/6.png" @click="onClick('6')"/>
 	  </div>
-	  <div class="row" style="top:371px">
+	  <div class="row" style="top:368px">
 		  <img src="/common/images/num_pad/1.png" @click="onClick('1')"/>
 		  <img src="/common/images/num_pad/2.png" @click="onClick('2')"/>
 		  <img src="/common/images/num_pad/3.png" @click="onClick('3')"/>
@@ -204,33 +204,19 @@
 	  left: 27px;
 	  top: 114px;
 	  width: 378px;
-	  height: 115px;
+	  height: 95px;
 	  border-radius: 36px;
 	  flex-direction: column;
 	  border: 3px solid #262626;
 	  justify-content: center;
   }
-  
-  .itemtext {
-	  font-size: 36px;
-	  font-weight: bold;
-	  height: 68px;
-	  width: 102px;
-	  color: white;
-	  text-align: center;
-	  text-overflow: ellipsis;
-	  lines: 1;
-	  padding: 10px;
-	  margin-right: 9px;
-	  background-color: #262626;
-	  border-radius:12px;
-  }
+
   
   .row {
 	  position:absolute;
 	  left: 32px;
-	  width:368px;
-	  height:67px;
+	  width:358px;
+	  height:77px;
 	  padding:0px 6px;
 	  justify-content: space-between;
   }

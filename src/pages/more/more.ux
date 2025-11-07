@@ -190,7 +190,7 @@
 	  nowTime: "00:00",
 	  timer: null,
 	  showProgressBar: true,
-	  chapterSwitchStyle: 'boundary',
+	  chapterSwitchStyle: 'button',
     timeFormat: '24h'
 	},
 	protected: {

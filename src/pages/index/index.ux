@@ -100,31 +100,29 @@ export default {
     this.isNavigating = false;
     this.loadSettingsAndFiles();
   },
-  loadSettingsAndFiles() {
-      const that = this;
+  getStorage(key, defaultValue) {
+    return new Promise((resolve) => {
       storage.get({
-        key: 'EBOOK_SHELF_PAGE_SIZE',
+        key: key,
         success: (data) => {
-            if (data) that.pageSize = parseInt(data);
-            else that.pageSize = 12;
+          resolve(data || defaultValue);
         },
         fail: () => {
-            that.pageSize = 12;
+          resolve(defaultValue);
         }
       });
-      storage.get({
-          key: 'EBOOK_SHELF_STYLE',
-          success: (data) => {
-              if (data) that.shelfStyle = data;
-              else that.shelfStyle = 'cover';
-          },
-          fail: () => {
-              that.shelfStyle = 'cover';
-          },
-          complete: () => {
-              that.loadFileList();
-          }
-      });
+    });
+  },
+  async loadSettingsAndFiles() {
+    const [pageSize, shelfStyle] = await Promise.all([
+      this.getStorage('EBOOK_SHELF_PAGE_SIZE', 12),
+      this.getStorage('EBOOK_SHELF_STYLE', 'list')
+    ]);
+
+    this.pageSize = parseInt(pageSize);
+    this.shelfStyle = shelfStyle;
+
+    this.loadFileList();
   },
   loadFileList() {
     const that = this;
@@ -135,33 +133,12 @@ export default {
             try {
                 let books = JSON.parse(data.text);
                 if (that.shelfStyle === 'cover') {
-                    let checkedCount = 0;
-                    if (books.length === 0) {
-                        that.allBooks = [];
-                        that.loadPage(0);
-                        return;
-                    }
                     books.forEach(book => {
                         book.hasRealCover = false;
-                        const coverPath = `internal://files/books/${book.dirName}/cover.jpg`;
-                        file.access({
-                            uri: coverPath,
-                            success: () => {
-                                book.hasRealCover = true;
-                            },
-                            complete: () => {
-                                checkedCount++;
-                                if (checkedCount === books.length) {
-                                    that.allBooks = books;
-                                    that.loadPage(0);
-                                }
-                            }
-                        });
                     });
-                } else {
-                    that.allBooks = books;
-                    that.loadPage(0);
                 }
+                that.allBooks = books;
+                that.loadPage(0);
             } catch (e) {
                 that.allBooks = [];
                 that.visibleBooks = [];
@@ -183,7 +160,23 @@ export default {
       const end = start + this.pageSize;
       this.visibleBooks = this.allBooks.slice(start, end);
       this.currentPage = page;
+      if (this.shelfStyle === 'cover') {
+        this.checkCovers();
+      }
     }
+  },
+
+  checkCovers() {
+    this.visibleBooks.forEach((book, index) => {
+      const coverPath = `internal://files/books/${book.dirName}/cover.jpg`;
+      file.access({
+        uri: coverPath,
+        success: () => {
+          const newBook = Object.assign({}, book, { hasRealCover: true });
+          this.visibleBooks.splice(index, 1, newBook);
+        }
+      });
+    });
   },
 
   prevPage() {

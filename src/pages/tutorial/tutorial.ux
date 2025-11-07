@@ -1,0 +1,142 @@
+<template>
+	<div class="page" style="flex-direction: column;">
+  
+	  <list class="list">
+		  <list-item for="{{tutorialList}}" class="item" @click="routerTo($item)" type="item">
+			  <div class="item-content">
+				  <marquee text-offset="25" scrollamount="30" class="itemtext">{{$item.title}}</marquee>
+				  <marquee text-offset="25" scrollamount="40" class="itemtext2">{{$item.subtitle}}</marquee>
+			  </div>
+			  <img src="/common/images/enter.png" style="width:40px;height: 40px;"/>
+		  </list-item>
+	  </list>
+  
+	  <img static src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 336px;height: 102px;" />
+	  <img static src="/common/images/back.png" @click="back" style="position: absolute;left: 6px;top: 6px;width: 72px;height: 72px;"/>
+	  <text style="position: absolute;left: 78px;top: 7px;width: 180px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+		{{nowTime}}
+	  </text>
+	  <text style="position: absolute;left: 78px;top: 35px;width: 180px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		  教程中心
+	  </text>
+	</div>
+  </template>
+  
+  <script>
+  import router from '@system.router'
+  
+  export default {
+	private: {
+	  nowTime: "00:00",
+	  timer: null,
+	  tutorialList: [
+		{
+			title: '如何同步书籍？',
+			subtitle: '通过手机客户端传入设备',
+			content: '请先在手机上安装“弦电子书同步器”应用。\n\n随后，打开小米运动健康，连接手环。\n\n保证小米运动健康连接到手环并且可以在后台运行后，打开“弦电子书同步器”。\n\n导入一本书籍（支持TXT、EPUB和NVB私有格式，不支持DOCX等格式。\n\n随后点击书籍卡片的同步按钮，与手环进行同步。'
+		},
+		{
+			title: '为什么会显示空间不足',
+			subtitle: '明明空间就是足的……',
+			content: '小米Vela嵌入式系统会预留部分空间，为系统升级做准备，因此通过米环管理看见的剩余空间不等于能够使用的空间。'
+		},
+		{
+			title: '为什么调整字号后出现问题',
+			subtitle: '内容显示不全……',
+			content: '该问题为个例，无法复现，因此无法修复。\n\n如果经常遇到，还是别调字号了吧。'
+		},
+		{
+			title: '耗电太快怎么办？',
+			subtitle: '电量不够啦……',
+			content: '别用即可。'
+		}
+	  ]
+	},
+	updateTime() {
+	  const date = new Date();
+	  let hours = date.getHours();
+	  let minutes = date.getMinutes();
+  
+	  hours = hours < 10 ? '0' + hours : hours;
+	  minutes = minutes < 10 ? '0' + minutes : minutes;
+  
+	  this.nowTime = `${hours}:${minutes}`;
+	},
+	onInit() {
+	  this.updateTime();
+	  this.timer = setInterval(() => {
+		this.updateTime();
+	  }, 1000);
+	},
+	onDestroy(){
+		clearInterval(this.timer);
+	},
+	routerTo(item) {
+	  router.push({
+		uri: '/pages/textReader',
+		params: {
+			pageTitle: item.title,
+			pageContent: item.content
+		}
+	  })
+	},
+	back(){
+		router.back();
+	}
+  }
+  </script>
+  
+  <style>
+  .page {
+	  width: 336px;
+	  height: 480px;
+	  background-color: #000000;
+  }
+  
+  .list {
+	  width: 336px;
+	  height: 480px;
+	  position: absolute;
+	  top:0px;
+	  left:0px;
+	padding: 86px 6px;
+  }
+  
+  .item {
+	  width: 100%;
+	  height: 112px;
+	  padding: 14px 20px;
+	  margin-bottom: 8px;
+	  background-color: #262626;
+	  border-radius: 36px;
+	  align-items: center;
+	justify-content: space-between;
+  }
+  
+  .itemtext {
+	  font-size: 32px;
+	  line-height:40px;
+	  width: 100%;
+	  font-weight: bold;
+	  color: white;
+	  text-overflow: ellipsis;
+	  lines: 1;
+  }
+  
+  .itemtext2 {
+	  font-size: 28px;
+	  line-height: 37px;
+	  font-weight: bold;
+	  color: rgba(255,255,255,0.6);
+	  text-overflow: ellipsis;
+	  lines: 1;
+  }
+  
+  
+  .item-content {
+	  height: 100%;
+	  flex:1;
+	  flex-direction: column;
+	  justify-content: space-between;
+  }
+  </style>

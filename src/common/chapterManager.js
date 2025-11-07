@@ -1,19 +1,11 @@
 import file from '@system.file';
 
-const chapterCache = new Map();
-const CACHE_EXPIRY = 5 * 60 * 1000;
-
 /**
  * 解析章节列表
  * @param {string} bookName - 书籍目录名
  * @returns {Promise<Array>} 章节数组
  */
 async function loadChapterList(bookName) {
-    const cached = chapterCache.get(bookName);
-    if (cached && (Date.now() - cached.timestamp < CACHE_EXPIRY)) {
-        return [...cached.chapters];
-    }
-    
     const listUri = `internal://files/books/${bookName}/list.txt`;
     
     try {
@@ -27,14 +19,9 @@ async function loadChapterList(bookName) {
         
         const chapters = parseChapterList(data.text);
         
-        chapterCache.set(bookName, {
-            chapters,
-            timestamp: Date.now()
-        });
-        
         return chapters;
     } catch (error) {
-        console.error(`Failed to load chapter list for ${bookName}:`, error);
+        // console.error(`Failed to load chapter list for ${bookName}:`, error);
         throw error;
     }
 }
@@ -72,30 +59,6 @@ function parseChapterList(text) {
 }
 
 /**
- * 清除指定书籍的缓存
- * @param {string} bookName - 书籍目录名
- */
-function clearCache(bookName) {
-    if (bookName) {
-        chapterCache.delete(bookName);
-    } else {
-        chapterCache.clear();
-    }
-}
-
-/**
- * 预加载章节列表（后台异步）
- * @param {string} bookName - 书籍目录名
- */
-function preloadChapterList(bookName) {
-    setTimeout(() => {
-        loadChapterList(bookName).catch(e => {
-            // 不影响正常流程
-        });
-    }, 0);
-}
-
-/**
  * 批量获取章节（用于分页）
  * @param {string} bookName - 书籍目录名
  * @param {number} page - 页码（从0开始）
@@ -119,6 +82,38 @@ async function getChapterPage(bookName, page = 0, pageSize = 8) {
     };
 }
 
+async function findChapterPage(bookName, chapterIndex, pageSize = 8) {
+    const allChapters = await loadChapterList(bookName);
+    if (!allChapters || allChapters.length === 0) {
+        return {
+            chapters: [],
+            totalPages: 1,
+            currentPage: 0,
+            totalChapters: 0
+        };
+    }
+
+    const currentIndex = allChapters.findIndex(ch => ch.index === chapterIndex);
+    const totalChapters = allChapters.length;
+    const totalPages = Math.ceil(totalChapters / pageSize) || 1;
+    let currentPage = 0;
+
+    if (currentIndex >= 0) {
+        currentPage = Math.floor(currentIndex / pageSize);
+    }
+    
+    const start = currentPage * pageSize;
+    const end = start + pageSize;
+    const chapters = allChapters.slice(start, end);
+
+    return {
+        chapters,
+        totalPages,
+        currentPage,
+        totalChapters
+    };
+}
+
 /**
  * 根据章节索引查找章节信息
  * @param {string} bookName - 书籍目录名
@@ -130,12 +125,40 @@ async function getChapterByIndex(bookName, chapterIndex) {
     return chapters.find(ch => ch.index === chapterIndex) || null;
 }
 
+async function getChapterInfo(bookName, chapterIndex) {
+    const chapters = await loadChapterList(bookName);
+    if (!chapters || chapters.length === 0) {
+        return { chapter: null, chapterArrayIndex: -1, totalChapters: 0 };
+    }
+    
+    let chapterArrayIndex = chapters.findIndex(c => c.index === chapterIndex);
+    
+    if (chapterArrayIndex === -1 && chapters.length > 0) {
+        return { chapter: chapters[0], chapterArrayIndex: 0, totalChapters: chapters.length };
+    }
+    
+    return {
+        chapter: chapters[chapterArrayIndex],
+        chapterArrayIndex: chapterArrayIndex,
+        totalChapters: chapters.length
+    };
+}
+
+async function getChapterByArrayIndex(bookName, arrayIndex) {
+    const chapters = await loadChapterList(bookName);
+    if (!chapters || arrayIndex < 0 || arrayIndex >= chapters.length) {
+        return null;
+    }
+    return chapters[arrayIndex];
+}
+
 export default {
     loadChapterList,
     parseChapterList,
-    clearCache,
-    preloadChapterList,
     getChapterPage,
-    getChapterByIndex
+    getChapterByIndex,
+    getChapterInfo,
+    getChapterByArrayIndex,
+    findChapterPage
 };
 

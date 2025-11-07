@@ -92,10 +92,10 @@ export default {
 	  		key: 'EBOOK_FONT',
 	  		value: this.fontSize.toString(),
 	  		success: function(data) {
-	  		  //console.log('handling success')
+	  		  
 	  		},
 	  		fail: function(data, code) {
-	  		  //console.log(`handling fail, code = ${code}`)
+	  		  
 	  		}
 	  	})
   	router.back();

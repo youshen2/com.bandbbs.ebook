@@ -78,13 +78,13 @@ export default {
     toggleFollowSystem() {
         this.followSystem = !this.followSystem;
         if (this.followSystem) {
-            brightness.setMode({ mode: brightness.AUTO_MODE });
+            brightness.setMode({ mode: 1 });
             storage.set({
                 key: FOLLOW_SYSTEM_KEY,
                 value: 'true'
             });
         } else {
-            brightness.setMode({ mode: brightness.MANUAL_MODE });
+            brightness.setMode({ mode: 0 });
             brightness.setValue({ value: this.brightnessValue });
             storage.set({
                 key: FOLLOW_SYSTEM_KEY,
@@ -94,7 +94,7 @@ export default {
     },
 	change(e) {
 		this.brightnessValue = e.detail.value;
-        brightness.setMode({ mode: brightness.MANUAL_MODE });
+        brightness.setMode({ mode: 0 });
         brightness.setValue({ value: this.brightnessValue });
 		storage.set({
 			key: BRIGHTNESS_KEY,

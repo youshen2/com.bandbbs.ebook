@@ -24,11 +24,11 @@ storageFile.get = function(param){
     file.readText({
       uri: fileSavedPath,
       success: function(data) {
-        // console.log('READ SAVED FILE : ' + fileSavedPath + " -> " + data.text)
+        // 
         func(JSON.parse(data.text))
       },
       fail: function(data, code) {
-        // console.log(`handling fail, code = ${code}`)
+        // 
         func({})
       }
     })
@@ -39,8 +39,8 @@ storageFile.save = function(data,param){
       uri: fileSavedPath,
       text: JSON.stringify(data),
       success: function() {
-        // console.log('handling success')
-        // console.log('SAVE FILE : ' + fileSavedPath + " -> " + JSON.stringify(data))
+        // 
+        // 
         if(param.success){
             param.success();
         }
@@ -49,7 +49,7 @@ storageFile.save = function(data,param){
         }
       },
       fail: function(data, code) {
-        console.log(`handling fail, code = ${code}`)
+        // console.log(`handling fail, code = ${code}`)
         if(param.fail){
             param.fail(data, code);
         }
@@ -69,11 +69,11 @@ storageFile.set = function(param){
     file.readText({
       uri: fileSavedPath,
       success: function(data) {
-        // console.log('READ SAVED FILE : ' + fileSavedPath + " -> " + data.text)
+        // 
         func(JSON.parse(data.text))
       },
       fail: function(data, code) {
-        // console.log(`handling fail, code = ${code}`)
+        // 
         func({})
       }
     })
@@ -92,11 +92,11 @@ storageFile.delete = function(param){
     file.readText({
       uri: fileSavedPath,
       success: function(data) {
-        // console.log('READ SAVED FILE : ' + fileSavedPath + " -> " + data.text)
+        // 
         func(JSON.parse(data.text))
       },
       fail: function(data, code) {
-        // console.log(`handling fail, code = ${code}`)
+        // 
         func({})
       }
     })

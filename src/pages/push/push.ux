@@ -69,6 +69,7 @@
 <script>
 import router from '@system.router'
 import brightness from "@system.brightness"
+import progressCalculator from '../../common/progressCalculator.js'
 
 export default {
 	// ÷﹢‐+-＋－×÷％
@@ -119,6 +120,9 @@ export default {
         case "success":
           this.state = "upload"
           this.state2 = "succ"
+          if (this.fileName) {
+            progressCalculator.calculateAndSaveProgressMeta(this.fileName);
+          }
           break;
         case "cancel":
           this.state = "ready";

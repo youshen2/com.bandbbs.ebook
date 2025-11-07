@@ -1,12 +1,5 @@
 import file from '@system.file';
-
-function runAsyncFunc(func, params) {
-    return new Promise((resolve, reject) => func({
-        success: resolve,
-        fail: (data, code) => reject({data, code}),
-        ...params
-    }));
-}
+import runAsyncFunc from '../utils/runAsyncFunc.js';
 
 const PROGRESS_FILE = 'progress.json';
 

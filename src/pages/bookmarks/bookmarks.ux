@@ -6,8 +6,8 @@
     <list class="list" if="{{allBookmarks.length > 0}}">
       <list-item for="{{visibleBookmarks}}" class="item" type="bookmark">
         <div class="text-content" @click="jumpTo($idx)">
-          <marquee class="itemtext" scrollamount="20" text-offset="10">{{$item.name}}</marquee>
-          <marquee class="itemtext2" scrollamount="50" text-offset="10">{{formatBookmarkLocation($item)}} | {{formatTime($item.time)}}</marquee>
+          <marquee class="itemtext" scrollamount="20" text-offset="25">{{$item.name}}</marquee>
+          <marquee class="itemtext2" scrollamount="50" text-offset="25">{{formatBookmarkLocation($item)}} | {{formatTime($item.time)}}</marquee>
         </div>
         <div class="button-container">
           <img src="/common/images/edit.png" @click="editBookmark($idx)" style="width: 72px; height: 72px;" />
@@ -49,7 +49,8 @@ export default {
     currentPage: 0,
     totalPages: 1,
     nowTime: "00:00",
-    timer: null
+    timer: null,
+    isNavigating: false
   },
   protected: {
     name: ''
@@ -69,6 +70,7 @@ export default {
     }, 1000);
   },
   onShow() {
+    this.isNavigating = false;
     this.loadBookmarks();
   },
   onDestroy() {
@@ -99,6 +101,9 @@ export default {
     }
   },
   async jumpTo(index) {
+    if (this.isNavigating) return;
+    this.isNavigating = true;
+
     const realIndex = this.currentPage * PAGE_SIZE + index;
     const bookmark = this.allBookmarks[realIndex];
     const progress = await bookStorage.get(this.name);
@@ -114,6 +119,7 @@ export default {
       router.back();
     } catch (e) {
       prompt.showToast({ message: '跳转失败', duration: 2000 });
+      this.isNavigating = false;
     }
   },
   deleteBookmark(index) {

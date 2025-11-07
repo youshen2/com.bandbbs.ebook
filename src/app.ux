@@ -11,6 +11,7 @@ globalThis.conn.setHandshakeListener(() => {
 })
 globalThis.connfile = globalThis.conn.register(interconnfile);
 export default {
+    originalBrightnessMode: null,
     onInit() {
         file.mkdir({
             uri: 'internal://files/books/',
@@ -20,30 +21,44 @@ export default {
                 });
             }
         });
-
+    },
+    onShow() {
         storage.get({
             key: 'EBOOK_BRIGHTNESS_FOLLOW_SYSTEM',
             success: (data) => {
                 if (data === 'false') {
-                    storage.get({
-                        key: 'EBOOK_BRIGHTNESS',
-                        success: function(brightnessData) {
-                            if (brightnessData) {
-                                const brightnessValue = parseInt(brightnessData);
-                                if (!isNaN(brightnessValue)) {
-                                    brightness.setMode({
-                                        mode: brightness.MANUAL_MODE
-                                    });
-                                    brightness.setValue({
-                                        value: brightnessValue
-                                    });
+                    brightness.getMode({
+                        success: (data) => {
+                            this.originalBrightnessMode = data.mode;
+                            storage.get({
+                                key: 'EBOOK_BRIGHTNESS',
+                                success: (brightnessData) => {
+                                    if (brightnessData) {
+                                        const brightnessValue = parseInt(brightnessData);
+                                        if (!isNaN(brightnessValue)) {
+                                            brightness.setMode({
+                                                mode: brightness.MANUAL_MODE
+                                            });
+                                            brightness.setValue({
+                                                value: brightnessValue
+                                            });
+                                        }
+                                    }
                                 }
-                            }
+                            });
                         }
                     });
                 }
             }
         });
+    },
+    onHide() {
+        if (this.originalBrightnessMode !== null) {
+            brightness.setMode({
+                mode: this.originalBrightnessMode
+            });
+            this.originalBrightnessMode = null;
+        }
     }
 }
 </script>

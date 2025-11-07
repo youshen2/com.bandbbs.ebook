@@ -1,8 +1,8 @@
 {
   "package": "com.bandbbs.ebook.plus",
   "name": "电子书",
-  "versionName": "4.2.1.RW",
-  "versionCode": 251103,
+  "versionName": "4.3.0.RW",
+  "versionCode": 251107,
   "minPlatformVersion": 1100,
   "icon": "/common/logo.png",
   "simulationVersion": "default",
@@ -132,6 +132,30 @@
       },
       "pages/shelfStyle": {
         "component": "shelfStyle"
+      },
+      "pages/textReader": {
+        "component": "textReader"
+      },
+      "pages/chapterSwitchSetting": {
+        "component": "chapterSwitchSetting"
+      },
+      "pages/chapterSwitchStyle": {
+        "component": "chapterSwitchStyle"
+      },
+      "pages/swipeSensitivity": {
+        "component": "swipeSensitivity"
+      },
+      "pages/tutorial": {
+        "component": "tutorial"
+      },
+      "pages/shelfPageSizeSetting": {
+        "component": "shelfPageSizeSetting"
+      },
+      "pages/autoReadDistanceSetting": {
+        "component": "autoReadDistanceSetting"
+      },
+      "pages/timeFormatSetting": {
+        "component": "timeFormatSetting"
       }
     }
   },

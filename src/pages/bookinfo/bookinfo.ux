@@ -8,15 +8,28 @@
 			
 			<list-item class="item" type="info">
 				<text class="item-title">文件名</text>
-				<marquee class="item-value" scrollamount="50" text-offset="10">{{fileName}}</marquee>
+				<marquee class="item-value" scrollamount="50" text-offset="25">{{fileName}}</marquee>
 			</list-item>
 			<list-item class="item" type="info" if="{{author}}">
 				<text class="item-title">作者</text>
-				<marquee class="item-value" scrollamount="50" text-offset="10">{{author}}</marquee>
+				<marquee class="item-value" scrollamount="50" text-offset="25">{{author}}</marquee>
 			</list-item>
-			<list-item class="item" type="info">
-				<text class="item-title">文件大小</text>
-				<text class="item-value">{{fileSize}}</text>
+			<list-item class="item" type="info" style="height: 240px; flex-direction: column;">
+				<text class="item-title">占用空间</text>
+				<text class="item-value" style="width: auto;">{{totalStorage}}</text>
+				<div style="width: 100%; height: 1px; background-color: rgba(255,255,255,0.2); margin: 8px 0px;"></div>
+				<div style="display: flex; flex-direction: row; justify-content: space-between; width: 100%;">
+					<text class="item-title" style="font-size: 24px;">章节占用</text>
+					<text class="item-value" style="font-size: 24px; width: auto;">{{chapterStorage}}</text>
+				</div>
+				<div style="display: flex; flex-direction: row; justify-content: space-between; width: 100%;">
+					<text class="item-title" style="font-size: 24px;">封面占用</text>
+					<text class="item-value" style="font-size: 24px; width: auto;">{{coverStorage}}</text>
+				</div>
+				<div style="display: flex; flex-direction: row; justify-content: space-between; width: 100%;">
+					<text class="item-title" style="font-size: 24px;">索引占用</text>
+					<text class="item-value" style="font-size: 24px; width: auto;">{{indexStorage}}</text>
+				</div>
 			</list-item>
 			<list-item class="item" type="info">
 				<text class="item-title">同步进度</text>
@@ -34,9 +47,9 @@
 				<text class="item-title">分类</text>
 				<text class="item-value">{{category}}</text>
 			</list-item>
-			<list-item class="item" type="info" if="{{summary}}" style="height: auto; min-height: 112px;">
-				<text class="item-title">简介</text>
-				<text class="item-value" style="lines: 5; text-overflow: ellipsis;">{{summary}}</text>
+			<list-item class="item" type="summary" if="{{summary}}" @click="showSummary">
+				<text class="item-title">书籍简介</text>
+				<text class="item-value" style="color: rgba(255,255,255,0.8);">点击查看 →</text>
 			</list-item>
 		</list>
 
@@ -54,20 +67,16 @@
 <script>
 import router from '@system.router'
 import file from '@system.file'
-import prompt from '@system.prompt'
-
-function runAsyncFunc(func, params) {
-    return new Promise((resolve, reject) => func({
-        success: resolve,
-        fail: (data, code) => reject({data, code}),
-        ...params
-    }));
-}
+import runAsyncFunc from '../../utils/runAsyncFunc.js'
+import storage from '../../common/storage.js'
 
 export default {
 	private: {
 		fileName: '加载中...',
-		fileSize: '加载中...',
+		totalStorage: '加载中...',
+		chapterStorage: '加载中...',
+		coverStorage: '加载中...',
+		indexStorage: '加载中...',
 		wordCount: '加载中...',
 		nowTime: "00:00",
 		timer: null,
@@ -77,7 +86,8 @@ export default {
 		summary: '',
 		bookStatus: '',
 		category: '',
-		syncProgress: '计算中...'
+		syncProgress: '计算中...',
+        timeFormat: '24h'
 	},
 	protected: {
 		cPath: '',
@@ -87,12 +97,29 @@ export default {
 		const date = new Date();
 		let hours = date.getHours();
 		let minutes = date.getMinutes();
-		hours = hours < 10 ? '0' + hours : hours;
-		minutes = minutes < 10 ? '0' + minutes : minutes;
-		this.nowTime = `${hours}:${minutes}`;
+        if (this.timeFormat === '12h') {
+            let ampm = hours >= 12 ? '下午' : '上午';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            this.nowTime = `${ampm} ${hours}:${minutes}`;
+        } else {
+            hours = hours < 10 ? '0' + hours : hours;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            this.nowTime = `${hours}:${minutes}`;
+        }
 	},
 	onInit() {
-		this.updateTime();
+        storage.get({
+            key: 'EBOOK_TIME_FORMAT',
+            success: (data) => {
+                if(data) this.timeFormat = data;
+                this.updateTime();
+            },
+            fail: () => {
+                this.updateTime();
+            }
+        });
 		this.timer = setInterval(() => {
 			this.updateTime();
 		}, 1000);
@@ -101,9 +128,17 @@ export default {
 	onDestroy() {
 		clearInterval(this.timer);
 	},
+	showSummary() {
+		router.push({
+			uri: 'pages/textReader',
+			params: {
+				pageTitle: '简介',
+				pageContent: this.summary
+			}
+		});
+	},
 	async loadFileInfo() {
 		const that = this;
-		const bookDirUri = `internal://files/books/${this.name}/`;
 		const bookContentDirUri = `internal://files/books/${this.name}/content/`;
 		const bookInfoUri = `internal://files/books/${this.name}/book_info.json`;
 		const listUri = `internal://files/books/${this.name}/list.txt`;
@@ -140,20 +175,52 @@ export default {
 		});
 
 
-		this.fileSize = '计算中...';
+		this.totalStorage = '计算中...';
+		this.chapterStorage = '计算中...';
+		this.coverStorage = '计算中...';
+		this.indexStorage = '计算中...';
 		try {
-			const listResult = await runAsyncFunc(file.list, { uri: bookContentDirUri });
 			let totalSize = 0;
-			if (listResult.fileList) {
-				for (const f of listResult.fileList) {
-					if (f.type === 'file') {
-						totalSize += f.length;
+			let chapterSize = 0;
+			let coverSize = 0;
+			let indexSize = 0;
+			try {
+				const listResult = await runAsyncFunc(file.list, { uri: bookContentDirUri });
+				if (listResult.fileList) {
+					for (const f of listResult.fileList) {
+						if (f.type === 'file') {
+							chapterSize += f.length;
+						}
 					}
 				}
+			} catch(e) { }
+			this.chapterStorage = this.formatFileSize(chapterSize);
+			totalSize += chapterSize;
+			try {
+				const coverInfo = await runAsyncFunc(file.get, { uri: coverUri });
+				coverSize = coverInfo.length;
+			} catch (e) {
+				coverSize = 0;
 			}
-			this.fileSize = this.formatFileSize(totalSize);
+			this.coverStorage = this.formatFileSize(coverSize);
+			totalSize += coverSize;
+			try {
+				const bookInfo = await runAsyncFunc(file.get, { uri: bookInfoUri });
+				indexSize += bookInfo.length;
+			} catch (e) { }
+			try {
+				const listInfo = await runAsyncFunc(file.get, { uri: listUri });
+				indexSize += listInfo.length;
+			} catch (e) { }
+			this.indexStorage = this.formatFileSize(indexSize);
+			totalSize += indexSize;
+
+			this.totalStorage = this.formatFileSize(totalSize);
 		} catch (e) {
-			this.fileSize = '计算失败';
+			this.totalStorage = '计算失败';
+			this.chapterStorage = '计算失败';
+			this.coverStorage = '计算失败';
+			this.indexStorage = '计算失败';
 		}
 	},
 	async calculateSyncProgress(totalChapters, listUri) {

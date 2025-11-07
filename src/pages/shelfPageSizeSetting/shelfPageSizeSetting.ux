@@ -1,0 +1,129 @@
+<import name="number" src="../../components/number_choose/number_choose"></import>
+<template>
+  <div class="page" style="flex-direction: column;">
+
+	<div class="info-panel">
+		<text class="info-title">书架每页数量</text>
+		<text class="info-value">{{shelfPageSize}}</text>
+		<text class="info-desc">调整在书架上每页显示的书籍数量，由于性能原因，该值请不要过大。</text>
+	</div>
+	
+	<number style="position: absolute;bottom:6px" max="15" min="2" step="1" value="{{shelfPageSize}}" @change="changeSize" name="调整数量"></number>
+
+	<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 6px;top: 6px;width: 72px;height: 72px;"/>
+	<img static src="/common/images/reset.png" @click="reset" style="position: absolute;left: 258px;top: 6px;width: 72px;height: 72px;"/>
+	<text style="position: absolute;left: 78px;top: 7px;width: 180px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+	  {{nowTime}}
+	</text>
+	<text style="position: absolute;left: 78px;top: 35px;width: 180px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		每页数量
+	</text>
+  </div>
+</template>
+
+<script>
+import router from '@system.router'
+import storage from '../../common/storage.js'
+import app from '@system.app'
+
+export default {
+  private: {
+	shelfPageSize: 6,
+	nowTime: "00:00",
+	timer: null
+  },
+  updateTime() {
+		const date = new Date();
+		let hours = date.getHours();
+		let minutes = date.getMinutes();
+
+		hours = hours < 10 ? '0' + hours : hours;
+		minutes = minutes < 10 ? '0' + minutes : minutes;
+
+		this.nowTime = `${hours}:${minutes}`;
+	},
+  onInit() {
+	this.updateTime();
+	this.timer = setInterval(() => {
+		this.updateTime();
+	}, 1000);
+    storage.get({
+      key: 'EBOOK_SHELF_PAGE_SIZE',
+      success:(data)=>{
+        if (data) {
+          this.shelfPageSize = parseInt(data)
+        }
+      }
+	})
+  },
+  onDestroy(){
+	  clearInterval(this.timer);
+	},
+  changeSize(e){
+	  this.shelfPageSize = e.detail.value
+	  storage.set({
+		  key: 'EBOOK_SHELF_PAGE_SIZE',
+		  value: this.shelfPageSize.toString()
+	  })
+  },
+  reset() {
+	this.shelfPageSize = 6;
+	storage.set({
+		key: "EBOOK_SHELF_PAGE_SIZE",
+		value: this.shelfPageSize.toString(),
+	});
+  },
+  back(){
+	storage.set({
+	  		key: 'EBOOK_SHELF_PAGE_SIZE',
+	  		value: this.shelfPageSize.toString(),
+	  	})
+  	router.back();
+  },
+  exit(){
+	  app.terminate();
+  }
+}
+</script>
+
+<style>
+.page {
+	width: 336px;
+	height: 480px;
+	background-color: #000000;
+}
+
+.info-panel {
+    position: absolute;
+    left: 6px;
+    top: 86px;
+    width: 324px;
+    height: 280px;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.info-title {
+	font-size: 28px;
+	font-weight: bold;
+	color: white;
+	line-height: 38px;
+	margin-bottom: 6px;
+}
+
+.info-value {
+	font-size: 48px;
+	font-weight: bold;
+	color: #0D6EFF;
+	line-height: 56px;
+	margin-bottom: 10px;
+}
+
+.info-desc {
+	font-size: 22px;
+	color: rgba(255,255,255,0.6);
+	line-height: 30px;
+	text-align: center;
+}
+</style>

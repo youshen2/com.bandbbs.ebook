@@ -29,7 +29,7 @@ export default class InterHandshake extends interconn {
                         action: 'versionError',
                         title: '版本不兼容',
                         confirmText: '客户端版本过低',
-                        subText: '请将手机APP更新到最新版本再使用',
+                        subText: '请将手机客户端更新到最新版本再使用本小程序',
                     }
                 });
             }

@@ -1,0 +1,101 @@
+<template>
+    <div class="page">
+        <scroll scroll-y="{{true}}" style="position: absolute;width: 336px;height: {{480 - verticalMargin * 2}};top: {{verticalMargin}}px;">
+            <div class="content-container">
+                <text class="content" style="font-size: {{fontSize}}px; color: rgba(255,255,255,{{opacity/100}}); line-height: {{lineHeight}}px;">{{content}}</text>
+            </div>
+        </scroll>
+        <img src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 336px;height: 102px;" />
+        <text style="position: absolute;left: 78px;top: 7px;width: 180px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">{{nowTime}}</text>
+        <marquee text-offset="25" scrollamount="40" style="position: absolute;left: 78px;top: 35px;width: 180px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">{{title}}</marquee>
+		<img src="/common/images/back.png" @click="back" style="position: absolute;left: 6px;top: 6px;width: 72px;height: 72px;"/>
+    </div>
+</template>
+
+<script>
+    import router from '@system.router';
+    import storage from '../../common/storage.js';
+
+    export default {
+        private: {
+            title: '',
+            content: '',
+            nowTime: "00:00",
+            timer: null,
+            fontSize: 26,
+            opacity: 100,
+            verticalMargin: 10,
+            lineHeight: 30
+        },
+        onInit() {
+            this.title = this.pageTitle || '详情';
+            this.content = this.pageContent || '无内容';
+            this.updateTime();
+            this.timer = setInterval(() => {
+                this.updateTime();
+            }, 1000);
+            this.loadSettings();
+        },
+        onDestroy() {
+            if (this.timer) {
+                clearInterval(this.timer);
+                this.timer = null;
+            }
+        },
+        updateTime() {
+            const date = new Date();
+            let hours = date.getHours();
+            let minutes = date.getMinutes();
+            hours = hours < 10 ? '0' + hours : hours;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            this.nowTime = `${hours}:${minutes}`;
+        },
+        loadSettings() {
+            storage.get({
+                key: 'EBOOK_FONT',
+                success: (data) => {
+                    if (data) {
+                        this.fontSize = parseInt(data);
+                    }
+                    this.lineHeight = parseInt((-0.01) * (this.fontSize ** 2) + 1.62 * this.fontSize - 3.23);
+                }
+            });
+            storage.get({
+                key: 'EBOOK_OPACITY',
+                success: (data) => {
+                    if (data) this.opacity = parseInt(data)
+                }
+            });
+            storage.get({
+                key: 'EBOOK_VERTICAL_MARGIN',
+                success: (data) => {
+                    if (data) {
+                        this.verticalMargin = parseInt(data);
+                    }
+                }
+            });
+        },
+        back() {
+            router.back();
+        }
+    }
+</script>
+
+<style>
+    .page {
+        flex-direction: column;
+        background-color: #000000;
+        width: 336px;
+        height: 480px;
+    }
+    .content-container {
+        position: absolute;
+        width: 336px;
+        top: 102px;
+    }
+    .content {
+        width: 336px;
+        text-align: left; 
+        font-weight: bold;
+    }
+</style>

@@ -1,21 +1,22 @@
 <template>
 	<div class="page">
-  
-	  <img src="/common/images/about.png" style="position: absolute;left: 48px;top: 30px;"/>
-	  <img src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
-    <!-- <img static src="/common/images/info.png" @click="routeAbout" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/> -->
-    <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
-      {{nowTime}}
-    </text>
-    <text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
-      {{bigTitle}}
-    </text>
-    <text style="position: absolute;left: 74px;top: 146px;width: 380px;height: 48px;font-size: 36px;font-weight: bold;color: #FFFFFF;">
-      弦{{appName}}
-    </text>
-    <text style="position: absolute;left: 74px;top: 198px;width: 280px;height: 48px;font-size: 36px;font-weight: bold;color: rgba(255, 255, 255, 0.6);">
-      {{appVer}}
-    </text>
+    <scroll scroll-y="{{true}}" bounces="{{true}}" style="position: absolute;width: 336px;height: 480px;">
+      <img src="/common/images/about_img.png" style="width: 100%;"/>
+
+      <text style="position: absolute;left: 74px;top: 102px;width: 282px;height: 48px;font-size: 36px;font-weight: bold;color: #FFFFFF;">
+        弦{{appName}}
+      </text>
+      <text style="position: absolute;left: 74px;top: 144px;width: 204px;height: 48px;font-size: 36px;font-weight: bold;color: rgba(255, 255, 255, 0.6);">
+        {{displayVersion}}
+      </text>
+      <text style="position: absolute;left: 74px;top: 186px;width: 282px;height: 36px;font-size: 24px;font-weight: bold;color: rgba(255, 255, 255, 0.4);">
+        {{versionType}}
+      </text>
+    </scroll>
+    <img src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 102px;" />
+    <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">{{nowTime}}</text>
+    <text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">关于</text>
+    <img src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
 	</div>
   </template>
   
@@ -25,6 +26,7 @@
   // import storage from '@system.storage' 
   // import prompt from '@system.prompt' 
   import app from '@system.app' 
+  import storage from '../../common/storage.js'
   // import file from '@system.file' 
   
   // import { hmUI } from '../../common/utils.js'
@@ -36,22 +38,25 @@
 	// 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
 	private: {
     nowTime:':',
-	  bigTitle:'关于',
     appName:'弦电子书',
     appVer:'1.0.0',
-    timer:null
+    displayVersion:'1.0.0',
+    versionType:'',
+    timer:null,
+    timeFormat: '24h'
 	},
 	protected: {
   
 	},
 	onInit() {
-    this.updateTime();
+    this.loadTimeFormat();
 		const that = this;
     this.timer = setInterval(function(){
       that.updateTime();
     }, 60000);
     this.appName=app.getInfo().name;
     this.appVer=app.getInfo().versionName;
+    this.parseVersion();
 	},
   onShow(){
 	  this.updateTime();
@@ -62,16 +67,81 @@
 	back(){
 		router.back();
 	},
+  loadTimeFormat() {
+    storage.get({
+        key: 'EBOOK_TIME_FORMAT',
+        success: (data) => {
+            if (data) {
+                this.timeFormat = data;
+            }
+            this.updateTime();
+        },
+        fail: () => {
+            this.updateTime();
+        }
+    });
+  },
   updateTime() {
     const date = new Date();
     let hours = date.getHours();
     let minutes = date.getMinutes();
-
-    // 格式化小时和分钟为两位数
-    hours = hours < 10 ? '0' + hours : hours;
-    minutes = minutes < 10 ? '0' + minutes : minutes;
-
-    this.nowTime = `${hours}:${minutes}`;
+    if (this.timeFormat === '12h') {
+        let ampm = hours >= 12 ? '下午' : '上午';
+        hours = hours % 12;
+        hours = hours ? hours : 12; 
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        this.nowTime = `${ampm} ${hours}:${minutes}`;
+    } else {
+        hours = hours < 10 ? '0' + hours : hours;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        this.nowTime = `${hours}:${minutes}`;
+    }
+  },
+  parseVersion() {
+    const version = this.appVer;
+    
+    const parts = version.split('.');
+    let mainVersion = '';
+    let versionTypeCode = '';
+    
+    if (parts.length >= 3) {
+      // 提取主版本号
+      mainVersion = parts.slice(0, 3).join('.');
+      
+      // 版本类型后缀
+      if (parts.length > 3) {
+        versionTypeCode = parts[3];
+      } else if (parts[2].includes('RW') || parts[2].includes('BAND')) {
+        const thirdPart = parts[2];
+        if (thirdPart.includes('RW')) {
+          mainVersion = thirdPart.replace('RW', '');
+          versionTypeCode = 'RW';
+        } else if (thirdPart.includes('BAND10')) {
+          mainVersion = thirdPart.replace('BAND10', '');
+          versionTypeCode = 'BAND10';
+        } else if (thirdPart.includes('BAND')) {
+          mainVersion = thirdPart.replace('BAND', '');
+          versionTypeCode = 'BAND';
+        }
+      }
+    } else {
+      mainVersion = version;
+    }
+    
+    this.displayVersion = mainVersion;
+    
+    switch(versionTypeCode) {
+      case 'RW':
+        this.versionType = '红米手表版';
+        break;
+      case 'BAND10':
+        this.versionType = '米环10版';
+        break;
+      default:
+      case 'BAND':
+        this.versionType = '米环Pro版';
+        break;
+    }
   }
   
   }
@@ -83,8 +153,9 @@
 	  height: 514px;
 	  background-color: #000000;
   }
-  
-  /* 更多信息样式 */
-  
+  .content-container {
+        position: absolute;
+        width: 336px;
+        top: 102px;
+    }
   </style>
-  

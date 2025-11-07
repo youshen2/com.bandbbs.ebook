@@ -98,7 +98,7 @@ export default {
 	left: 27px;
 	top: 112px;
 	width: 378px;
-	height: 298px;
+	height: 348px;
 	border-radius: 36px;
 	flex-direction: column;
 	border: 3px solid #262626;

@@ -22,12 +22,13 @@
 	<number style="position: absolute;top:415px;" max="50" min="0" step="5" value="{{verticalMargin}}" @change="changeMargin" name="调整边距"></number>
 
 	<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+	<img static src="/common/images/info.png" @click="showHelp" style="position: absolute;left: 230px;top: 24px;width: 82px;height: 82px;"/>
 	<img static src="/common/images/reset.png" @click="reset" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
-	<text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+	<text style="position: absolute;left: 130px;top: 16px;width: 80px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 	  {{nowTime}}
 	</text>
-	<text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
-		垂直边距
+	<text style="position: absolute;left: 130px;top: 46px;width: 80px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		边距
 	</text>
   </div>
 </template>
@@ -92,6 +93,15 @@ export default {
 		key: "EBOOK_VERTICAL_MARGIN",
 		value: this.verticalMargin.toString(),
 	});
+  },
+  showHelp() {
+    router.push({
+      uri: '/pages/help',
+      params: {
+        title: '关于垂直边距',
+        content: '由于 小米手环9Pro 最新的系统更改，调整垂直边距可能不会产生实际效果。'
+      }
+    })
   },
   back(){
 	storage.set({

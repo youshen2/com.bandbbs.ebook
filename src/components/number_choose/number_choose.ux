@@ -65,6 +65,9 @@ export default {
     },
     end(){
         clearInterval(interval);
+    },
+    onDestroy() {
+        this.end();
     }
 };
 </script>

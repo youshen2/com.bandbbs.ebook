@@ -8,13 +8,6 @@
 			  </div>
 			  <img src="/common/images/enter.png" style="width:40px;height: 40px;"/>
 		  </list-item>
-		  <list-item class="item" @click="routerTo('bookmarks')" type="item">
-			  <div class="item-content">
-				  <text class="itemtext">书签管理</text>
-				  <text class="itemtext2">查看或跳转书签</text>
-			  </div>
-			  <img src="/common/images/enter.png" style="width:40px;height: 40px;"/>
-		  </list-item>
 		  <list-item type="item" class="item" @click="routerTo('readPresent')">
 			  <div class="item-content">
 				  <text class="itemtext">跳转章节</text>
@@ -22,6 +15,20 @@
 			  </div>
 			  <img src="/common/images/enter.png" style="width:40px;height: 40px;"/>
 		  </list-item>
+		  <list-item class="item" @click="routerTo('bookmarks')" type="item">
+			  <div class="item-content">
+				  <text class="itemtext">书签管理</text>
+				  <text class="itemtext2">查看或跳转书签</text>
+			  </div>
+			  <img src="/common/images/enter.png" style="width:40px;height: 40px;"/>
+		  </list-item>
+		  <list-item class="item" @click="toggleKeepScreenOnClick" type="item">
+			<div class="item-content">
+				<text class="itemtext">屏幕常亮</text>
+				<text class="itemtext2">阅读器保持常亮</text>
+			</div>
+			<img src="{{isKeepScreenOn ? '/common/images/Switch_ON.png' : '/common/images/Switch_OFF.png'}}" style="width:64px;height: 40px;"/>
+		</list-item>
 		  <list-item type="item" class="item" @click="backToFirst">
 			  <div class="item-content">
 				  <text class="itemtext">回到第一段</text>
@@ -45,7 +52,7 @@
 		  <list-item class="item" @click="routerTo('bookinfo')" type="item">
 			  <div class="item-content">
 				  <text class="itemtext">书籍详情</text>
-				  <text class="itemtext2">文件大小, 推送时间等</text>
+				  <text class="itemtext2">封面、占用空间等</text>
 			  </div>
 			  <img src="/common/images/enter.png" style="width:40px;height: 40px;"/>
 		  </list-item>
@@ -75,6 +82,7 @@
   
   export default {
 	private: {
+		isKeepScreenOn: false,
 		nowTime: "00:00",
 		timer: null
 	},
@@ -106,6 +114,9 @@
   
 	},
 	onShow(){
+		if (typeof globalThis.isKeepScreenOn !== 'undefined') {
+			this.isKeepScreenOn = globalThis.isKeepScreenOn;
+		}
 	},
 	onBackPress(){
 	},
@@ -132,6 +143,10 @@
 		uri: '/pages/' + url,
 		params: { name: this.name }
 	  })
+	},
+	toggleKeepScreenOnClick() {
+		this.isKeepScreenOn = !this.isKeepScreenOn;
+		globalThis.isKeepScreenOn = this.isKeepScreenOn;
 	},
 	async backToFirst(){
 		try {

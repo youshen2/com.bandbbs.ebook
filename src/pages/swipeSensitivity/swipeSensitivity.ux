@@ -1,0 +1,170 @@
+<import name="number" src="../../components/number_choose/number_choose"></import>
+<template>
+	<div class="page" style="flex-direction: column;">
+  
+	  <div class="preview-container">
+		  <div class="preview-screen">
+			  <div class="content-area">
+				  <text class="preview-text">
+					  ← 向左滑动
+				  </text>
+			  </div>
+		  </div>
+		  <div class="info-panel">
+			  <text class="info-title">滑动灵敏度</text>
+			  <text class="info-value">{{ sensitivityValue }}</text>
+			  <text class="info-desc">滑动换章的响应距离</text>
+		  </div>
+	  </div>
+	  
+	  <number style="position: absolute;bottom:6px" max="200" min="20" step="10" value="{{ sensitivityValue }}" @change="change" name="调整灵敏度"></number>
+  
+		<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 6px;top: 6px;width: 72px;height: 72px;"/>
+		<img static src="/common/images/reset.png" @click="reset" style="position: absolute;left: 258px;top: 6px;width: 72px;height: 72px;"/>
+		<text style="position: absolute;left: 78px;top: 7px;width: 180px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+		  {{nowTime}}
+		</text>
+		<text style="position: absolute;left: 78px;top: 35px;width: 180px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+			滑动灵敏度
+		</text>
+	</div>
+  </template>
+  
+  <script>
+  import router from '@system.router'
+  import storage from '../../common/storage.js'
+  
+  const SENSITIVITY_KEY = 'EBOOK_SWIPE_SENSITIVITY';
+  const DEFAULT_SENSITIVITY = 80;
+  
+  export default {
+	  private: {
+		  sensitivityValue: DEFAULT_SENSITIVITY,
+		  nowTime: "00:00",
+		  timer: null
+	  },
+	  updateTime() {
+		  const date = new Date();
+		  let hours = date.getHours();
+		  let minutes = date.getMinutes();
+		  hours = hours < 10 ? '0' + hours : hours;
+		  minutes = minutes < 10 ? '0' + minutes : minutes;
+		  this.nowTime = `${hours}:${minutes}`;
+	  },
+	  onInit() {
+		  this.updateTime();
+		  this.timer = setInterval(() => {
+			  this.updateTime();
+		  }, 1000);
+  
+		  storage.get({
+			  key: SENSITIVITY_KEY,
+			  success: (data) => {
+				  if (data) {
+					  this.sensitivityValue = parseInt(data);
+				  }
+			  },
+		  });
+	  },
+	  onDestroy(){
+		clearInterval(this.timer);
+	  },
+	  change(e) {
+		  this.sensitivityValue = e.detail.value;
+		  storage.set({
+			  key: SENSITIVITY_KEY,
+			  value: this.sensitivityValue.toString(),
+		  });
+	  },
+	  reset() {
+		  this.sensitivityValue = DEFAULT_SENSITIVITY;
+		  storage.set({
+			  key: SENSITIVITY_KEY,
+			  value: this.sensitivityValue.toString(),
+		  });
+	  },
+	  back() {
+		  router.back();
+	  },
+  };
+  </script>
+  
+  <style>
+  .page {
+	  width: 336px;
+	  height: 480px;
+	  background-color: #000000;
+  }
+  
+  .preview-container {
+	  position: absolute;
+	  left: 6px;
+	  top: 86px;
+	  width: 324px;
+	  height: 280px;
+	  flex-direction: row;
+	  justify-content: space-between;
+	  align-items: center;
+	  padding: 10px;
+  }
+  
+  .preview-screen {
+	  width: 112px;
+	  height: 160px;
+	  background-color: #1a1a1a;
+	  border-radius: 20px;
+	  border: 3px solid #333333;
+	  flex-direction: column;
+	  overflow: hidden;
+	  position: relative;
+  }
+  
+  .content-area {
+	  flex: 1;
+	  width: 100%;
+	  background-color: #262626;
+	  align-items: center;
+	  justify-content: center;
+	  padding: 8px;
+  }
+  
+  .preview-text {
+	  font-size: 20px;
+	  font-weight: bold;
+	  color: white;
+	  text-align: center;
+	  lines: 3;
+	  text-overflow: ellipsis;
+  }
+  
+  .info-panel {
+	  flex-direction: column;
+	  align-items: center;
+	  justify-content: center;
+	  flex: 1;
+	  margin-left: 10px;
+  }
+  
+  .info-title {
+	  font-size: 28px;
+	  font-weight: bold;
+	  color: white;
+	  line-height: 38px;
+	  margin-bottom: 6px;
+  }
+  
+  .info-value {
+	  font-size: 48px;
+	  font-weight: bold;
+	  color: #0D6EFF;
+	  line-height: 56px;
+	  margin-bottom: 10px;
+  }
+  
+  .info-desc {
+	  font-size: 22px;
+	  color: rgba(255,255,255,0.6);
+	  line-height: 30px;
+	  text-align: center;
+  }
+  </style>

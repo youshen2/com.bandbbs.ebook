@@ -159,6 +159,9 @@
       },
       "pages/timeFormatSetting": {
         "component": "timeFormatSetting"
+      },
+      "pages/preventParagraphSplittingSetting": {
+        "component": "preventParagraphSplittingSetting"
       }
     }
   },

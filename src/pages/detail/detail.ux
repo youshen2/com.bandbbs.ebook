@@ -128,7 +128,9 @@
 		longPressTimeout: null,
 		isProcessingClick: false,
 		autoReadDistance: 100,
-        timeFormat: '24h'
+        timeFormat: '24h',
+		contentHeight: 0,
+		preventParagraphSplitting: false,
 	  },
 	  protected: {
 		name: '',
@@ -205,7 +207,8 @@
 			{ key: 'EBOOK_CHAPTER_SWITCH_SENSITIVITY', type: 'int', prop: 'chapterSwitchSensitivity' },
 			{ key: 'EBOOK_SWIPE_SENSITIVITY', type: 'int', prop: 'swipeSensitivity' },
 			{ key: 'EBOOK_CHAPTER_SWITCH_STYLE', type: 'string', prop: 'chapterSwitchStyle', defaultValue: 'button' },
-			{ key: 'EBOOK_AUTO_READ_DISTANCE', type: 'int', prop: 'autoReadDistance', defaultValue: 100 }
+			{ key: 'EBOOK_AUTO_READ_DISTANCE', type: 'int', prop: 'autoReadDistance', defaultValue: 100 },
+			{ key: 'EBOOK_PREVENT_PARAGRAPH_SPLITTING', type: 'bool', prop: 'preventParagraphSplitting' }
 		];
 
         storage.get({
@@ -259,6 +262,15 @@
 		};
 	
 		loadNextSetting();
+	},
+	updateContentHeight() {
+		setTimeout(() => {
+			this.$element("contentContainer").getBoundingClientRect({
+				success: (rect) => {
+					this.contentHeight = rect.height;
+				}
+			});
+		}, 50);
 	},
 	updateScrollHeight() {
 		this.scrollHeight = 514 - this.verticalMargin * 2;
@@ -367,6 +379,7 @@
 		  that.page1 = { text: str, offset: that.currentFileOffset, length: bytesRead };
 		  that.loadNextSegmentNoScroll();
 		  that.updateChapterProgress();
+		  that.updateContentHeight();
 		});
 	},
 	loadNextSegmentNoScroll(){
@@ -386,6 +399,7 @@
 				that.page2 = null;
 			}
 			that.restoreScrollPosition();
+			that.updateContentHeight();
 		});
 	},
 	restoreScrollPosition() {
@@ -429,7 +443,12 @@
 				for (let i = 0, j = 0; i < data.buffer.length; i += 2, j++) {
 					charCodes[j] = (data.buffer[i+1] << 8) | data.buffer[i];
 				}
-				const str = String.fromCharCode.apply(null, charCodes);
+
+				let str = '';
+				const CHUNK_SIZE = 8192;
+				for (let i = 0; i < charCodes.length; i += CHUNK_SIZE) {
+					str += String.fromCharCode.apply(null, charCodes.subarray(i, i + CHUNK_SIZE));
+				}
 				
 				if (!isPotentiallyPartial) {
 					cb(str, actualLength);
@@ -440,38 +459,21 @@
 				if(cutLength > str.length) cutLength = str.length;
 
 				const chunk = str.substring(0, cutLength);
-				const lastNewlineIndex = chunk.lastIndexOf('\n');
 				
-				if (lastNewlineIndex > 0) {
-					const finalStr = chunk.substring(0, lastNewlineIndex + 1);
-					const bytesToReport = finalStr.length * 2;
-					cb(finalStr, bytesToReport);
-				} else {
-					cb(chunk, actualLength);
+				if (this.preventParagraphSplitting) {
+					const lastNewlineIndex = chunk.lastIndexOf('\n');
+					if (lastNewlineIndex > 0) {
+						const finalStr = chunk.substring(0, lastNewlineIndex + 1);
+						const bytesToReport = finalStr.length * 2;
+						cb(finalStr, bytesToReport);
+						return;
+					}
 				}
+				
+				cb(chunk, chunk.length * 2);
 			} catch (e) {
-				var str = '';
-				for(var i = 0; i < data.buffer.length; i += 2){
-				  str += String.fromCharCode(data.buffer[i+1]*256 + data.buffer[i]);
-				}
-				if (!isPotentiallyPartial) {
-					cb(str, actualLength);
-					return;
-				}
-
-				let cutLength = actualLength / 2;
-				if(cutLength > str.length) cutLength = str.length;
-
-				const chunk = str.substring(0, cutLength);
-				const lastNewlineIndex = chunk.lastIndexOf('\n');
-
-				if (lastNewlineIndex > 0) {
-					const finalStr = chunk.substring(0, lastNewlineIndex + 1);
-					const bytesToReport = finalStr.length * 2;
-					cb(finalStr, bytesToReport);
-				} else {
-					cb(chunk, actualLength);
-				}
+				prompt.showToast({ message: `解码章节内容失败: ${e}` });
+				cb('', 0);
 			}
 		  },
 		  fail: function(){ cb('', 0); }
@@ -488,21 +490,16 @@
 		this.isAtChapterStart = this.currentFileOffset === 0 && this.currentScrollTop < 10;
 		this.saveData();
 
-		this.$element("contentContainer").getBoundingClientRect({
-			success: (rect) => {
-				const contentHeight = rect.height;
-				if (contentHeight > this.scrollHeight) {
-					const isNearBottom = this.currentScrollTop >= (contentHeight - this.scrollHeight - this.chapterSwitchSensitivity);
-					if (isNearBottom) {
-						let lastSeg = this.page2 || this.page1;
-						let newOffset = lastSeg.offset + lastSeg.length;
-						if(newOffset >= allSize) {
-							this.isAtChapterEnd = true;
-						}
-					}
+		if (this.contentHeight > this.scrollHeight) {
+			const isNearBottom = this.currentScrollTop >= (this.contentHeight - this.scrollHeight - this.chapterSwitchSensitivity);
+			if (isNearBottom) {
+				let lastSeg = this.page2 || this.page1;
+				let newOffset = lastSeg.offset + lastSeg.length;
+				if(newOffset >= allSize) {
+					this.isAtChapterEnd = true;
 				}
 			}
-		});
+		}
 	},
 	onScrollTop(){
 		if (this.wait) return;
@@ -560,6 +557,7 @@
 				that.updateChapterProgress();
 				that.saveData(true);
 				that.wait = false;
+				that.updateContentHeight();
 			},
 			fail: function() {
 				that.wait = false;
@@ -599,6 +597,7 @@
 						that.updateChapterProgress();
 						that.saveData(true);
 						that.wait = false;
+						that.updateContentHeight();
 					},
 					fail: function() {
 						that.wait = false;
@@ -709,6 +708,7 @@
                 that.page2 = null;
                 that.isAtChapterEnd = true;
                 that.scrollToEnd();
+				that.updateContentHeight();
                 return;
             }
 
@@ -720,6 +720,7 @@
                 }
                 that.isAtChapterEnd = true;
                 that.scrollToEnd();
+				that.updateContentHeight();
             });
         });
     },

@@ -192,26 +192,18 @@
 	  height: 160px;
   }
   
-  .list {
-	  width: 432px;
-	  height: 400px;
-	  position: absolute;
-	  top:72px;
-  }
-  
   .item {
 	  position: absolute;
 	  left: 27px;
 	  top: 114px;
 	  width: 378px;
-	  height: 95px;
+	  height: 102px;
 	  border-radius: 36px;
 	  flex-direction: column;
 	  border: 3px solid #262626;
 	  justify-content: center;
   }
 
-  
   .row {
 	  position:absolute;
 	  left: 32px;

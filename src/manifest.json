@@ -48,6 +48,9 @@
     },
     {
       "name": "system.vibrator"
+    },
+    {
+      "name": "system.battery"
     }
   ],
   "config": {

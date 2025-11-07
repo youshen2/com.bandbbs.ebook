@@ -29,13 +29,18 @@
 			</div>
 		</div>
 	  </scroll>
-		<img show="{{showSetting}}" src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 102px;" />
+		<img show="{{showSetting}}" src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 122px;" />
 		<img show="{{showSetting}}" src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
 		<img show="{{showSetting}}" src="/common/images/more.png" @click="gotoSetting" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
-		<text show="{{showSetting}}" style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
-			{{nowTime}}
-		</text>
-		<marquee scrollamount="50" text-offset="25" show="{{showSetting}}" style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		<div show="{{showSetting}}" style="position: absolute; left: 130px; top: 8px; width: 172px; flex-direction: column; align-items: center;">
+			<text style="line-height: 24px; font-weight: bold; font-size: 20px; color: rgba(255,255,255,0.6); text-align: center;">
+				{{batteryLevel}}
+			</text>
+			<text style="line-height: 28px; font-weight: bold; font-size: 24px; color: rgba(255,255,255,0.6); text-align: center;">
+				{{nowTime}}
+			</text>
+		</div>
+		<marquee scrollamount="50" text-offset="25" show="{{showSetting}}" style="position: absolute;left: 130px;top: 58px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 			{{currentChapterName}}
 		</marquee>
 
@@ -67,6 +72,7 @@
 	import progressCalculator from '../../common/progressCalculator.js'
 	import brightness from '@system.brightness'
 	import app from '@system.app'
+	import battery from '@system.battery'
 
 	let allSize = 0;
     let autoInterval = null;
@@ -89,7 +95,9 @@
 		swipe: 'column',
 		auto: false,
 		nowTime: "00:00",
+		batteryLevel: "",
 		timer: null,
+		timeCounter: 0,
 		savedScrollOffset: 0,
       	currentScrollTop: 0,
 		totalPages: 0,
@@ -153,17 +161,34 @@
             this.nowTime = `${hours}:${minutes}`;
         }
 	 },
+	 updateBatteryStatus() {
+		battery.getStatus({
+		  success: (data) => {
+			let level = Math.round(data.level * 100);
+			this.batteryLevel = data.charging ? `充电中 ${level}%` : `电量 ${level}%`;
+		  }
+		})
+	  },
 	updatePageNumber(){
 		this.currentPage = this.currentChapterIndexInAll + 1;
 		this.totalPages = this.totalChapters;
 	},
 	onInit(){
 		this.updateTime();
-		this.timer = setInterval(() => { this.updateTime(); }, 1000);
+		this.updateBatteryStatus();
+		this.timer = setInterval(() => { 
+			this.updateTime(); 
+			this.timeCounter++;
+			if (this.timeCounter >= 60) {
+				this.updateBatteryStatus();
+				this.timeCounter = 0;
+			}
+		}, 1000);
 		globalThis.isKeepScreenOn = this.isKeepScreenOn;
 	},
 	async onShow(){
 		this.loadSettings();
+		this.updateBatteryStatus();
 		if (typeof globalThis.isKeepScreenOn !== 'undefined') {
 			if (this.isKeepScreenOn !== globalThis.isKeepScreenOn) {
 				this.isKeepScreenOn = globalThis.isKeepScreenOn;

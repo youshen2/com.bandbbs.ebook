@@ -1,0 +1,150 @@
+<template>
+    <div class="page" style="flex-direction: column;">
+        <list class="list">
+            <list-item class="item" @click="routerTo('pageSizeSetting')" type="item">
+                <div class="item-content">
+                    <text class="itemtext" static>分段大小</text>
+                    <text class="itemtext2" static>翻页加载的文本量</text>
+                </div>
+                <img src="/common/images/enter.png" style="width:40px;height: 40px;" static/>
+            </list-item>
+            <list-item class="item" @click="routerTo('preventParagraphSplittingSetting')" type="item">
+                <div class="item-content">
+                    <text class="itemtext" static>段落防分割</text>
+                    <text class="itemtext2" static>避免段落被截断</text>
+                </div>
+                <img src="/common/images/enter.png" style="width:40px;height: 40px;" static/>
+            </list-item>
+        </list>
+
+
+        <img static src="/common/images/hd.png"
+            style="position: absolute;left: 0px;top: 0px;width: 336px;height: 102px;" />
+        <img static src="/common/images/back.png" @click="back"
+            style="position: absolute;left: 6px;top: 6px;width: 72px;height: 72px;" />
+        <text
+            style="position: absolute;left: 78px;top: 7px;width: 180px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+            {{nowTime}}
+        </text>
+        <text static
+            style="position: absolute;left: 78px;top: 35px;width: 180px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+            性能设置
+        </text>
+    </div>
+</template>
+
+<script>
+    import router from '@system.router'
+    import storage from '../../common/storage.js'
+
+    export default {
+        private: {
+            nowTime: "00:00",
+            timer: null,
+            timeFormat: '24h'
+        },
+        updateTime() {
+            const date = new Date();
+            let hours = date.getHours();
+            let minutes = date.getMinutes();
+
+            if (this.timeFormat === '12h') {
+                let ampm = hours >= 12 ? '下午' : '上午';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                minutes = minutes < 10 ? '0' + minutes : minutes;
+                this.nowTime = `${ampm} ${hours}:${minutes}`;
+            } else {
+                hours = hours < 10 ? '0' + hours : hours;
+                minutes = minutes < 10 ? '0' + minutes : minutes;
+                this.nowTime = `${hours}:${minutes}`;
+            }
+        },
+        onInit() {
+            storage.get({
+                key: 'EBOOK_TIME_FORMAT',
+                success: (data) => {
+                    if (data) {
+                        this.timeFormat = data;
+                    }
+                    this.updateTime();
+                },
+                fail: () => {
+                    this.updateTime();
+                }
+            });
+            this.timer = setInterval(() => {
+                this.updateTime();
+            }, 1000);
+        },
+        onDestroy() {
+            if (this.timer) {
+                clearInterval(this.timer);
+                this.timer = null;
+            }
+        },
+        routerTo(url) {
+            router.push({
+                uri: '/pages/' + url
+            })
+        },
+        back() {
+            router.back();
+        }
+    }
+</script>
+
+<style>
+    .page {
+        width: 336px;
+        height: 480px;
+        background-color: #000000;
+    }
+
+    .list {
+        width: 336px;
+        height: 480px;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        padding: 86px 6px;
+    }
+
+    .item {
+        width: 100%;
+        height: 112px;
+        padding: 14px 20px;
+        margin-bottom: 8px;
+        background-color: #262626;
+        border-radius: 36px;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .itemtext {
+        font-size: 32px;
+        line-height: 40px;
+        width: 100%;
+        font-weight: bold;
+        color: white;
+        text-overflow: ellipsis;
+        lines: 1;
+    }
+
+    .itemtext2 {
+        font-size: 28px;
+        line-height: 37px;
+        font-weight: bold;
+        color: rgba(255, 255, 255, 0.6);
+        text-overflow: ellipsis;
+        lines: 1;
+    }
+
+
+    .item-content {
+        height: 100%;
+        flex: 1;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+</style>

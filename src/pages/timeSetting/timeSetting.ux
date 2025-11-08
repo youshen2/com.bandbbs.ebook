@@ -1,18 +1,26 @@
 <template>
   <div class="page" style="flex-direction: column;">
-    <div class="item">
-      <text static style="font-size: 24px;font-weight:bold;color: rgba(255, 255, 255, 0.6);text-align: center;margin-bottom:80px">开启后，在阅读页隐藏UI后依旧在顶部显示时间和电量。</text>
-      <img static src="/common/images/Switch_ON.png" style="width: 113px;height: 80px;" @click="onClick" if="{{alwaysShowTime}}"/>
-      <img static src="/common/images/Switch_OFF.png" style="width: 113px;height: 80px;" @click="onClick" else/>
-      <text style="font-size: 36px;font-weight:bold;color: white;width: 100%;text-align: center;">
-        {{alwaysShowTime ? 'ON' : 'OFF'}}
-      </text>
-    </div>
-	  <img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
-	  <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
-		  {{nowTime}}
-	  </text>
-	  <text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+	<list class="list">
+		<list-item class="item" @click="onClick" type="item">
+			<div class="item-content">
+				<text class="itemtext" static>时间常驻</text>
+				<marquee scrollamount="30" class="itemtext2" static>在阅读页始终显示时间</marquee>
+			</div>
+			<img src="{{alwaysShowTime ? '/common/images/Switch_ON.png' : '/common/images/Switch_OFF.png'}}" style="width:64px;height: 40px;"/>
+		</list-item>
+		<list-item class="item" @click="routerTo('alwaysShowTimeSensitivitySetting')" if="{{alwaysShowTime}}" type="item">
+			<div class="item-content">
+				<text class="itemtext" static>灵敏度设置</text>
+				<marquee scrollamount="30" class="itemtext2" static>设置顶部标题栏不显示的距离</marquee>
+			</div>
+			<img src="/common/images/enter.png" style="width:40px;height: 40px;" static/>
+		</list-item>
+	</list>
+  <img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+  <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+    {{nowTime}}
+  </text>
+  <text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
       时间常驻
     </text>
   </div>
@@ -58,7 +66,6 @@ export default {
   },
   back(){
     router.back();
-    this.save()
   },
   save(){
     storage.set({
@@ -69,6 +76,11 @@ export default {
   onClick(){
     this.alwaysShowTime = !this.alwaysShowTime;
     this.save()
+  },
+  routerTo(url) {
+	  router.push({
+		uri: '/pages/' + url
+	  })
   }
 }
 </script>
@@ -79,17 +91,45 @@ export default {
   height: 514px;
   background-color: #000000;
 }
+.list {
+	width: 432px;
+	height: 514px;
+	position: absolute;
+	top:0px;
+	left:0px;
+  padding: 116px 12px;
+}
 .item {
-  position: absolute;
-  left: 6px;
-  top: 116px;
-  width: 420px;
-  height: 358px;
-  border-radius: 36px;
-  flex-direction: column;
-  border: 3px solid #262626;
-  align-items: center;
+	width: 100%;
+	height: 112px;
+	padding: 14px 20px;
+	margin-bottom: 8px;
+	background-color: #262626;
+	border-radius: 36px;
+	align-items: center;
   justify-content: space-between;
-  padding: 20px;
+}
+.item-content {
+	height: 100%;
+	flex:1;
+	flex-direction: column;
+	justify-content: space-between;
+}
+.itemtext {
+	font-size: 32px;
+	line-height:40px;
+	width: 100%;
+	font-weight: bold;
+	color: white;
+	text-overflow: ellipsis;
+	lines: 1;
+}
+.itemtext2 {
+	font-size: 28px;
+	line-height: 37px;
+	font-weight: bold;
+	color: rgba(255,255,255,0.6);
+	text-overflow: ellipsis;
+	lines: 1;
 }
 </style>

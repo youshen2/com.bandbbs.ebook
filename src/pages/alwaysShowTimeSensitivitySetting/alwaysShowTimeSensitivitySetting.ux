@@ -1,0 +1,191 @@
+<import name="number" src="../../components/number_choose/number_choose"></import>
+<template>
+	<div class="page" style="flex-direction: column;">
+  
+	  <div class="preview-container">
+		  <div class="preview-screen">
+			  <div class="content-area">
+				  <text static class="preview-text">
+					  顶部标题栏
+				  </text>
+			  </div>
+		  </div>
+		  <div class="info-panel">
+			  <text static class="info-title">隐藏距离</text>
+			  <text class="info-value">{{ distanceValue }}px</text>
+			  <text static class="info-desc">距离章节顶部多少像素内不显示标题栏</text>
+		  </div>
+	  </div>
+	  
+	  <number style="position: absolute;top:415px;" max.static="500" min.static="0" step.static="10" value="{{ distanceValue }}" @change="change" name.static="调整距离"></number>
+  
+	  <img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+	  <img static src="/common/images/reset.png" @click="reset" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
+	  <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+		{{nowTime}}
+	  </text>
+	  <text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+			灵敏度
+		</text>
+	</div>
+  </template>
+  
+  <script>
+  import router from '@system.router'
+  import storage from '../../common/storage.js'
+  
+  const DISTANCE_KEY = 'EBOOK_ALWAYS_SHOW_TIME_SENSITIVITY';
+  const DEFAULT_DISTANCE = 200;
+  
+  export default {
+	  private: {
+		  distanceValue: DEFAULT_DISTANCE,
+		  nowTime: "00:00",
+		  timer: null,
+          timeFormat: '24h'
+	  },
+	  updateTime() {
+		  const date = new Date();
+		  let hours = date.getHours();
+		  let minutes = date.getMinutes();
+          if (this.timeFormat === '12h') {
+            let ampm = hours >= 12 ? '下午' : '上午';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            this.nowTime = `${ampm} ${hours}:${minutes}`;
+        } else {
+            hours = hours < 10 ? '0' + hours : hours;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            this.nowTime = `${hours}:${minutes}`;
+        }
+	  },
+	  onInit() {
+          storage.get({
+              key: 'EBOOK_TIME_FORMAT',
+              success: (data) => {
+                  if(data) this.timeFormat = data;
+                  this.updateTime();
+              },
+              fail: () => {
+                  this.updateTime();
+              }
+          });
+		  this.timer = setInterval(() => {
+			  this.updateTime();
+		  }, 1000);
+  
+		  storage.get({
+			  key: DISTANCE_KEY,
+			  success: (data) => {
+				  if (data) {
+					  this.distanceValue = parseInt(data);
+				  }
+			  },
+		  });
+	  },
+	  onDestroy(){
+		if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+	  },
+	  change(e) {
+		  this.distanceValue = e.detail.value;
+		  storage.set({
+			  key: DISTANCE_KEY,
+			  value: this.distanceValue.toString(),
+		  });
+	  },
+	  reset() {
+		  this.distanceValue = DEFAULT_DISTANCE;
+		  storage.set({
+			  key: DISTANCE_KEY,
+			  value: this.distanceValue.toString(),
+		  });
+	  },
+	  back() {
+		  router.back();
+	  },
+  };
+  </script>
+  
+  <style>
+  .page {
+	  width: 432px;
+	  height: 514px;
+	  background-color: #000000;
+  }
+  
+  .preview-container {
+	  position: absolute;
+	  left: 6px;
+	  top: 86px;
+	  width: 420px;
+	  height: 320px;
+	  flex-direction: row;
+	  justify-content: space-between;
+	  align-items: center;
+	  padding: 10px;
+  }
+  
+  .preview-screen {
+	  width: 112px;
+	  height: 160px;
+	  background-color: #1a1a1a;
+	  border-radius: 20px;
+	  border: 3px solid #333333;
+	  flex-direction: column;
+	  overflow: hidden;
+	  position: relative;
+  }
+  
+  .content-area {
+	  flex: 1;
+	  width: 100%;
+	  background-color: #262626;
+	  align-items: center;
+	  justify-content: center;
+	  padding: 8px;
+  }
+  
+  .preview-text {
+	  font-size: 20px;
+	  font-weight: bold;
+	  color: white;
+	  text-align: center;
+	  lines: 3;
+	  text-overflow: ellipsis;
+  }
+  
+  .info-panel {
+	  flex-direction: column;
+	  align-items: center;
+	  justify-content: center;
+	  flex: 1;
+	  margin-left: 10px;
+  }
+  
+  .info-title {
+	  font-size: 28px;
+	  font-weight: bold;
+	  color: white;
+	  line-height: 38px;
+	  margin-bottom: 6px;
+  }
+  
+  .info-value {
+	  font-size: 48px;
+	  font-weight: bold;
+	  color: #0D6EFF;
+	  line-height: 56px;
+	  margin-bottom: 10px;
+  }
+  
+  .info-desc {
+	  font-size: 22px;
+	  color: rgba(255,255,255,0.6);
+	  line-height: 30px;
+	  text-align: center;
+  }
+  </style>

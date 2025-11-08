@@ -1,13 +1,8 @@
 {
   "package": "com.bandbbs.ebook.plus",
   "name": "电子书",
-<<<<<<< HEAD
-  "versionName": "4.3.2.RW",
-  "versionCode": 251109,
-=======
-  "versionName": "4.3.3.BAND",
+  "versionName": "4.3.3.RW",
   "versionCode": 251110,
->>>>>>> 7f4c075 (4.3.3)
   "minPlatformVersion": 1100,
   "icon": "/common/logo.png",
   "simulationVersion": "default",
@@ -143,6 +138,9 @@
       },
       "pages/shelfStyle": {
         "component": "shelfStyle"
+      },
+      "pages/alwaysShowTimeSensitivitySetting": {
+        "component": "alwaysShowTimeSensitivitySetting"
       },
       "pages/textReader": {
         "component": "textReader"

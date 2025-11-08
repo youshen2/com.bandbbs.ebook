@@ -7,16 +7,16 @@
         <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
             {{nowTime}}
         </text>
-        <text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+        <text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
             编辑名称
         </text>
 
         <div class="input-container">
             <div class="input-display" @click="toggleKeyboard">
-                <text class="input-label">书签名称</text>
+                <text static class="input-label">书签名称</text>
                 <div class="input-field">
                     <text class="input-text" if="{{textValue}}">{{textValue}}</text>
-                    <text class="input-placeholder" if="{{!textValue}}">请输入书签名称</text>
+                    <text static class="input-placeholder" if="{{!textValue}}">请输入书签名称</text>
                     <span class="cursor" if="{{!hideKeyboard}}"></span>
                 </div>
             </div>
@@ -27,9 +27,9 @@
 
         <input-method
             hide="{{hideKeyboard}}"
-            keyboardtype="QWERTY"
-            vibratemode="short"
-            screentype="rect"
+            keyboardtype.static="QWERTY"
+            vibratemode.static="short"
+            screentype.static="rect"
             @complete="onInput"
             @delete="onDelete"
             @visibilityChange="onVisibilityChange" />
@@ -71,7 +71,10 @@ export default {
         }, 1000);
     },
     onDestroy(){
-        clearInterval(this.timer);
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
     },
     onInput(evt) {
         if (this.textValue.length < 20) {
@@ -99,13 +102,15 @@ export default {
         }
 
         try {
-            const progress = await bookStorage.get(this.bookName);
+            let progress = await bookStorage.get(this.bookName);
             if (progress.bookmarks && progress.bookmarks[this.bookmarkIndex]) {
                 progress.bookmarks[this.bookmarkIndex].name = this.textValue;
                 await bookStorage.set(this.bookName, progress);
+                progress = null;
                 prompt.showToast({ message: '保存成功' });
                 router.back();
             } else {
+                progress = null;
                 prompt.showToast({ message: '找不到书签' });
             }
         } catch (e) {

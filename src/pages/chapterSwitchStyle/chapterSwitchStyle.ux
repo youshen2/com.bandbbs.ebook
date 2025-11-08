@@ -4,23 +4,23 @@
 	  <list class="list">
 		<list-item class="item {{onSelect==1?'item2':''}}" @click="select('1')" type="item">
 			<div class="item-content">
-				<text class="itemtext">左右滑动</text>
-				<text class="itemtext2">左滑切换章节</text>
+				<text class="itemtext" static>左右滑动</text>
+				<text class="itemtext2" static>左滑切换章节</text>
 			</div>
 			<img src="/common/images/check.png" style="width:40px;height: 40px;" if="{{onSelect==1}}"/>
 		</list-item>
 		  <list-item class="item {{onSelect==2?'item2':''}}" @click="select('2')" type="item">
 			<div class="item-content">
-				<text class="itemtext">按钮换章</text>
-				<text class="itemtext2">通过按钮切换章节</text>
+				<text class="itemtext" static>按钮换章</text>
+				<text class="itemtext2" static>通过按钮切换章节</text>
 			</div>
 			  <img src="/common/images/check.png" style="width:40px;height: 40px;" if="{{onSelect==2}}"/>
 		  </list-item>
 
 		  <list-item class="item {{onSelect==3?'item2':''}}" @click="select('3')" type="item">
 			<div class="item-content">
-				<text class="itemtext">越界换章</text>
-				<text class="itemtext2">滑动到边缘时切换章节</text>
+				<text class="itemtext" static>越界换章</text>
+				<text class="itemtext2" static>滑动到边缘时切换章节</text>
 			</div>
 			<img src="/common/images/check.png" style="width:40px;height: 40px;" if="{{onSelect==3}}"/>
 		  </list-item>
@@ -34,7 +34,7 @@
 		<text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 		  {{nowTime}}
 		</text>
-		<text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		<text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 			换章方式
 		</text>
 	</div>
@@ -46,12 +46,7 @@
   import app from '@system.app'
 
   export default {
-	  // ÷﹢‐+-＋－×÷％
-	// 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
 	private: {
-		// columnSwipe:"/common/images/false.png",
-		// rowSwipe:"/common/images/false.png",
-		// close:"/common/images/false.png",
 		onSelect:2,
 		txtNum:0,
 		nowTime: "00:00",
@@ -66,7 +61,6 @@
 		let hours = date.getHours();
 		let minutes = date.getMinutes();
 
-		// 格式化小时和分钟为两位数
 		hours = hours < 10 ? '0' + hours : hours;
 		minutes = minutes < 10 ? '0' + minutes : minutes;
 
@@ -79,10 +73,12 @@
 		}, 1000);
 	},
 	onDestroy(){
-		clearInterval(this.timer);
+		if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
 	},
 	onReady(){
-		// this.resetList();
 	},
 	resetList(){
 
@@ -107,7 +103,6 @@
 	  })
 	},
 	onBackPress(){
-		// this.resetList();
 	},
 
 	select(fun){
@@ -145,7 +140,6 @@
 		})
 	},
 	routerTo(url) {
-	  // 跳转到应用内的某个页面，router用法详见：文档->接口->页面路由
 	  router.push({
 		uri: '/pages/' + url
 	  })
@@ -169,7 +163,6 @@
 	  background-color: #000000;
   }
 
-  /* 更多信息样式 */
   .more-info {
 	width: 335px;
 	background-color: rgb(0,0,0);
@@ -192,7 +185,6 @@
 	top:0px;
 	left:0px;
   padding: 116px 12px;
-	/* background-color: red; */
 }
 
 .item {
@@ -202,7 +194,6 @@
 	margin-bottom: 8px;
 	background-color: #262626;
 	border-radius: 36px;
-	/* flex-direction: column; */
 	align-items: center;
   justify-content: space-between;
 }
@@ -219,20 +210,15 @@
 	color: white;
 	text-overflow: ellipsis;
 	lines: 1;
-	/* padding-left:12px; */
-	/* padding-right:12px; */
-	/* padding-top:12px; */
 }
 
 .itemtext2 {
 	font-size: 28px;
 	line-height: 37px;
-	/* width: 100%; */
 	font-weight: bold;
 	color: rgba(255,255,255,0.6);
 	text-overflow: ellipsis;
 	lines: 1;
-	/* padding-right:12px; */
 }
 
 

@@ -125,8 +125,9 @@ export default {
     this.loading = true;
 
     try {
-      const progress = await bookStorage.get(this.name);
+      let progress = await bookStorage.get(this.name);
       const chapterIndex = progress.chapterIndex !== null ? progress.chapterIndex : -1;
+      progress = null;
       
       const result = await chapterManager.findChapterPage(this.name, chapterIndex, PAGE_SIZE);
       
@@ -134,8 +135,8 @@ export default {
       this.currentPage = result.currentPage;
       this.totalPages = result.totalPages;
       this.totalChapters = result.totalChapters;
-      if (progress.chapterIndex !== null) {
-        this.currentChapterIndex = progress.chapterIndex;
+      if (chapterIndex !== -1) {
+        this.currentChapterIndex = chapterIndex;
       }
 
     } catch (error) {

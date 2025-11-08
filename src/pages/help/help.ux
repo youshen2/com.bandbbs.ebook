@@ -2,7 +2,7 @@
 	<div class="page">
 		<text class="tip-title">{{title}}</text>
 		<text class="tip-content">{{content}}</text>
-		<img src="/common/images/conform2.png" class="confirm-button" @click="confirm"/>
+		<img static src="/common/images/conform2.png" class="confirm-button" @click="confirm"/>
 	</div>
 </template>
 

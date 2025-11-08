@@ -2,13 +2,13 @@
 <template>
 	<div class="page" style="flex-direction: column">
 		<div class="item">
-			<text class="description">
+			<text static class="description">
 				调整阅读器页面中的“上一章”和“下一章”按钮的高度和触发灵敏度。
 			</text>
 		</div>
-		<number style="position: absolute;top:323px;" max="200" min="0" step="5" unit="px" value="{{scrollSensitivity}}" @change="onSensitivityChange" name="触发灵敏度">
+		<number style="position: absolute;top:323px;" max.static="200" min.static="0" step.static="5" unit.static="px" value="{{scrollSensitivity}}" @change="onSensitivityChange" name.static="触发灵敏度">
 		</number>
-		<number style="position: absolute;top:415px;" max="200" min="25" step="5" unit="px" value="{{buttonHeight}}" @change="onHeightChange" name="按钮高度">
+		<number style="position: absolute;top:415px;" max.static="200" min.static="25" step.static="5" unit.static="px" value="{{buttonHeight}}" @change="onHeightChange" name.static="按钮高度">
 		</number>
 
 		<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
@@ -16,7 +16,7 @@
 		<text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 		  {{nowTime}}
 		</text>
-		<text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		<text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 			翻章按钮
 		</text>
 	</div>
@@ -69,7 +69,10 @@ export default {
 		});
 	},
 	onDestroy(){
-	  clearInterval(this.timer);
+	  if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
 	},
 	onHeightChange(e) {
 		this.buttonHeight = e.detail.value;

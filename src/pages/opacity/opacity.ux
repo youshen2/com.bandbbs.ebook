@@ -7,7 +7,7 @@
 				文本预览文本预览文本预览文本预览文本预览文本预览文本预览文本预览文本预览文本预览文本预览文本预览文本预览文本文本预览文本预览文本预览文本预览文本预览文本预览文本预览文本预览文本预览文本预览文本预览文本预览文本预览文本
 			</text>
 		</div>
-		<number style="position: absolute; top: 415px" max="100" min="10" step="1" unit="%" value="{{opacity}}" @change="change" name="当前亮度">
+		<number style="position: absolute; top: 415px" max.static="100" min.static="10" step.static="1" unit.static="%" value="{{opacity}}" @change="change" name.static="当前亮度">
 		</number>
 
 		<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
@@ -15,7 +15,7 @@
 		<text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 		  {{nowTime}}
 		</text>
-		<text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		<text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 			字体亮度
 		</text>
 	</div>
@@ -27,8 +27,6 @@ import storage from '../../common/storage.js';
 import app from "@system.app";
 
 export default {
-	// ÷﹢‐+-＋－×÷％
-	// 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
 	private: {
 		lineHeight: 34,
 		fontSize: 28,
@@ -41,7 +39,6 @@ export default {
 		let hours = date.getHours();
 		let minutes = date.getMinutes();
 
-		// 格式化小时和分钟为两位数
 		hours = hours < 10 ? '0' + hours : hours;
 		minutes = minutes < 10 ? '0' + minutes : minutes;
 
@@ -73,7 +70,10 @@ export default {
 		})
 	},
 	onDestroy(){
-	  clearInterval(this.timer);
+	  if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
 	},
 	change(e) {
 		this.opacity = e.detail.value;
@@ -109,7 +109,6 @@ export default {
 	background-color: #000000;
 }
 
-/* 更多信息样式 */
 .more-info {
 	width: 431px;
 	background-color: rgb(0, 0, 0);
@@ -135,7 +134,6 @@ export default {
 	border-radius: 30px;
 	padding: 18px;
 
-	/* background-color: red; */
 }
 
 .item {

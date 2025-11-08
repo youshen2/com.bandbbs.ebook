@@ -4,26 +4,26 @@
 	  <div class="preview-container">
 		  <div class="preview-screen">
 			  <div class="content-area">
-				  <text class="preview-text">
+				  <text static class="preview-text">
 					  越界换章
 				  </text>
 			  </div>
 		  </div>
 		  <div class="info-panel">
-			  <text class="info-title">滑动灵敏度</text>
+			  <text static class="info-title">滑动灵敏度</text>
 			  <text class="info-value">{{ chapterSwitchSensitivity }}</text>
-			  <text class="info-desc">滑动多长的距离触发换章</text>
+			  <text static class="info-desc">滑动多长的距离触发换章</text>
 		  </div>
 	  </div>
 	  
-	  <number style="position: absolute;top:415px;" max="240" min="10" step="10" value="{{ chapterSwitchSensitivity }}" @change="change" name="调整灵敏度"></number>
+	  <number style="position: absolute;top:415px;" max.static="240" min.static="10" step.static="10" value="{{ chapterSwitchSensitivity }}" @change="change" name.static="调整灵敏度"></number>
 
 		<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
 		<img static src="/common/images/reset.png" @click="reset" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
 		<text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 		  {{nowTime}}
 		</text>
-		<text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		<text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 			越界换章
 		</text>
 	</div>

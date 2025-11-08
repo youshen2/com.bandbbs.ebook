@@ -1,10 +1,10 @@
 <template>
 	<div class="page" style="flex-direction: column;">
 
-	  <img if="{{allBooks.length == 0}}" src="/common/images/empty.png"
+	  <img if="{{allBooks.length == 0}}" static src="/common/images/empty.png"
 		  style="position: absolute;left: 152px;top: 156px;width: 128px;height: 128px;" />
 
-	  <text if="{{allBooks.length == 0}}" style="position: absolute;left: 0px;top: 319px;width: 432px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">书架空空</text>
+	  <text if="{{allBooks.length == 0}}" static style="position: absolute;left: 0px;top: 319px;width: 432px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">书架空空</text>
 
       <list class="list" if="{{shelfStyle === 'list'}}">
 		  <list-item for="{{visibleBooks}}" class="item" @click="selectFile($item)" type="nook">
@@ -43,11 +43,11 @@
     <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
       {{nowTime}}
     </text>
-    <text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+    <text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
       电子书
     </text>
 
-    <img if="{{allBooks.length == 0}}" src="/common/images/push.png" 
+    <img if="{{allBooks.length == 0}}" static src="/common/images/push.png" 
       style="position: absolute;left: 308px;top: 420px;width: 82px;height: 82px;" @click="routerTo('push')"/>
 	</div>
 </template>
@@ -94,7 +94,12 @@ export default {
     }, 1000);
   },
   onDestroy(){
-	  clearInterval(this.timer);
+	  if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+    this.allBooks = null;
+    this.visibleBooks = null;
   },
   onShow() {
     this.isNavigating = false;
@@ -139,6 +144,7 @@ export default {
                 }
                 that.allBooks = books;
                 that.loadPage(0);
+                books = null;
             } catch (e) {
                 that.allBooks = [];
                 that.visibleBooks = [];

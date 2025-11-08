@@ -1,7 +1,7 @@
 <template>
   <div class="page" style="flex-direction: column;">
-    <img if="{{allBookmarks.length === 0}}" src="/common/images/empty.png" style="position: absolute;left: 152px;top: 180px;width: 128px;height: 128px;" />
-    <text if="{{allBookmarks.length === 0}}" style="position: absolute;left: 0px;top: 332px;width: 432px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">暂无书签</text>
+    <img if="{{allBookmarks.length === 0}}" static src="/common/images/empty.png" style="position: absolute;left: 152px;top: 180px;width: 128px;height: 128px;" />
+    <text if="{{allBookmarks.length === 0}}" static style="position: absolute;left: 0px;top: 332px;width: 432px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">暂无书签</text>
 
     <list class="list" if="{{allBookmarks.length > 0}}">
       <list-item for="{{visibleBookmarks}}" class="item" type="bookmark">
@@ -10,8 +10,8 @@
           <marquee class="itemtext2" scrollamount="50" text-offset="25">{{formatBookmarkLocation($item)}} | {{formatTime($item.time)}}</marquee>
         </div>
         <div class="button-container">
-          <img src="/common/images/edit.png" @click="editBookmark($idx)" style="width: 72px; height: 72px;" />
-          <img src="/common/images/delete.png" @click="deleteBookmark($idx)" style="width: 72px; height: 72px;" />
+          <img static src="/common/images/edit.png" @click="editBookmark($idx)" style="width: 72px; height: 72px;" />
+          <img static src="/common/images/delete.png" @click="deleteBookmark($idx)" style="width: 72px; height: 72px;" />
         </div>
       </list-item>
       <list-item type="pagination" class="pagination-container" if="{{totalPages > 1}}">
@@ -29,7 +29,7 @@
     <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
       {{nowTime}}
     </text>
-    <text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+    <text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
       书签管理
     </text>
   </div>
@@ -74,11 +74,20 @@ export default {
     this.loadBookmarks();
   },
   onDestroy() {
-    clearInterval(this.timer);
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+    this.allBookmarks = null;
+    this.visibleBookmarks = null;
+    if (typeof global !== 'undefined' && typeof global.runGC === 'function') {
+      global.runGC();
+    }
   },
   async loadBookmarks() {
-    const progress = await bookStorage.get(this.name);
+    let progress = await bookStorage.get(this.name);
     this.allBookmarks = progress.bookmarks || [];
+    progress = null;
     this.totalPages = Math.ceil(this.allBookmarks.length / PAGE_SIZE) || 1;
     this.currentPage = 0;
     this.updateVisibleBookmarks();
@@ -106,7 +115,7 @@ export default {
 
     const realIndex = this.currentPage * PAGE_SIZE + index;
     const bookmark = this.allBookmarks[realIndex];
-    const progress = await bookStorage.get(this.name);
+    let progress = await bookStorage.get(this.name);
 
     progress.chapterIndex = bookmark.chapterIndex;
     progress.offsetInChapter = bookmark.offsetInChapter;
@@ -114,10 +123,12 @@ export default {
 
     try {
       await bookStorage.set(this.name, progress);
+      progress = null;
       prompt.showToast({ message: '正在跳转...', duration: 500 });
       globalThis.justJumpedFromBookmark = true;
       router.back();
     } catch (e) {
+      progress = null;
       prompt.showToast({ message: '跳转失败', duration: 2000 });
       this.isNavigating = false;
     }

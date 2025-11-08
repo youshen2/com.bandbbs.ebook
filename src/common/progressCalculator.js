@@ -5,7 +5,7 @@ const META_FILE = 'progress_meta.json';
 
 async function calculateAndSaveProgressMeta(bookName) {
     try {
-        const chapters = await chapterManager.loadChapterList(bookName);
+        let chapters = await chapterManager.loadChapterList(bookName);
         if (!chapters || chapters.length === 0) {
             return;
         }
@@ -32,9 +32,9 @@ async function calculateAndSaveProgressMeta(bookName) {
                 totalSize += chapterInfo.length;
 
             } catch (e) {
-                // Ignore missing chapter files
             }
         }
+        chapters = null;
 
         const metaData = {
             totalSize,
@@ -52,17 +52,18 @@ async function calculateAndSaveProgressMeta(bookName) {
             });
         });
     } catch (e) {
-        // console.error(`Failed to calculate progress meta for ${bookName}:`, e);
     }
 }
 
 async function getProgressMeta(bookName) {
     const uri = `internal://files/books/${bookName}/${META_FILE}`;
     try {
-        const data = await new Promise((resolve, reject) => {
+        let data = await new Promise((resolve, reject) => {
             file.readText({ uri, success: resolve, fail: reject });
         });
-        return JSON.parse(data.text);
+        const result = JSON.parse(data.text);
+        data = null;
+        return result;
     } catch (e) {
         return null;
     }

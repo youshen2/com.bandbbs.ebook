@@ -1,55 +1,54 @@
 <template>
 	<div class="page">
 		<list class="list" style="padding: 86px 6px 6px 6px;">
-			<!-- 封面图片（如果有）作为列表的第一项 -->
 			<list-item if="{{hasCover}}" type="cover" style="height: 255px; align-items: center; justify-content: center; margin-bottom: 12px;">
 				<img src="{{coverPath}}" style="width: 160px;height: 213px;object-fit: cover;border-radius: 12px;" />
 			</list-item>
 			
 			<list-item class="item" type="info">
-				<text class="item-title">文件名</text>
+				<text class="item-title" static>文件名</text>
 				<marquee class="item-value" scrollamount="50" text-offset="25">{{fileName}}</marquee>
 			</list-item>
 			<list-item class="item" type="info" if="{{author}}">
-				<text class="item-title">作者</text>
+				<text class="item-title" static>作者</text>
 				<marquee class="item-value" scrollamount="50" text-offset="25">{{author}}</marquee>
 			</list-item>
 			<list-item class="item" type="info" style="height: 240px; flex-direction: column;">
-				<text class="item-title">占用空间</text>
+				<text class="item-title" static>占用空间</text>
 				<text class="item-value" style="width: auto;">{{totalStorage}}</text>
-				<div style="width: 100%; height: 1px; background-color: rgba(255,255,255,0.2); margin: 8px 0px;"></div>
+				<div static style="width: 100%; height: 1px; background-color: rgba(255,255,255,0.2); margin: 8px 0px;"></div>
 				<div style="display: flex; flex-direction: row; justify-content: space-between; width: 100%;">
-					<text class="item-title" style="font-size: 24px;">章节占用</text>
+					<text class="item-title" style="font-size: 24px;" static>章节占用</text>
 					<text class="item-value" style="font-size: 24px; width: auto;">{{chapterStorage}}</text>
 				</div>
 				<div style="display: flex; flex-direction: row; justify-content: space-between; width: 100%;">
-					<text class="item-title" style="font-size: 24px;">封面占用</text>
+					<text class="item-title" style="font-size: 24px;" static>封面占用</text>
 					<text class="item-value" style="font-size: 24px; width: auto;">{{coverStorage}}</text>
 				</div>
 				<div style="display: flex; flex-direction: row; justify-content: space-between; width: 100%;">
-					<text class="item-title" style="font-size: 24px;">索引占用</text>
+					<text class="item-title" style="font-size: 24px;" static>索引占用</text>
 					<text class="item-value" style="font-size: 24px; width: auto;">{{indexStorage}}</text>
 				</div>
 			</list-item>
 			<list-item class="item" type="info">
-				<text class="item-title">同步进度</text>
+				<text class="item-title" static>同步进度</text>
 				<text class="item-value">{{syncProgress}}</text>
 			</list-item>
 			<list-item class="item" type="info">
-				<text class="item-title">总字数</text>
+				<text class="item-title" static>总字数</text>
 				<text class="item-value">{{wordCount}}</text>
 			</list-item>
 			<list-item class="item" type="info" if="{{bookStatus}}">
-				<text class="item-title">状态</text>
+				<text class="item-title" static>状态</text>
 				<text class="item-value">{{bookStatus}}</text>
 			</list-item>
 			<list-item class="item" type="info" if="{{category}}">
-				<text class="item-title">分类</text>
+				<text class="item-title" static>分类</text>
 				<text class="item-value">{{category}}</text>
 			</list-item>
 			<list-item class="item" type="summary" if="{{summary}}" @click="showSummary">
-				<text class="item-title">书籍简介</text>
-				<text class="item-value" style="color: rgba(255,255,255,0.8);">点击查看 →</text>
+				<text class="item-title" static>书籍简介</text>
+				<text class="item-value" style="color: rgba(255,255,255,0.8);" static>点击查看 →</text>
 			</list-item>
 		</list>
 
@@ -58,7 +57,7 @@
 		<text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 			{{nowTime}}
 		</text>
-		<text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		<text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 			书籍详情
 		</text>
 	</div>
@@ -126,7 +125,10 @@ export default {
 		this.loadFileInfo();
 	},
 	onDestroy() {
-		clearInterval(this.timer);
+		if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
 	},
 	showSummary() {
 		router.push({
@@ -185,7 +187,7 @@ export default {
 			let coverSize = 0;
 			let indexSize = 0;
 			try {
-				const listResult = await runAsyncFunc(file.list, { uri: bookContentDirUri });
+				let listResult = await runAsyncFunc(file.list, { uri: bookContentDirUri });
 				if (listResult.fileList) {
 					for (const f of listResult.fileList) {
 						if (f.type === 'file') {
@@ -193,24 +195,28 @@ export default {
 						}
 					}
 				}
+        listResult = null;
 			} catch(e) { }
 			this.chapterStorage = this.formatFileSize(chapterSize);
 			totalSize += chapterSize;
 			try {
-				const coverInfo = await runAsyncFunc(file.get, { uri: coverUri });
+				let coverInfo = await runAsyncFunc(file.get, { uri: coverUri });
 				coverSize = coverInfo.length;
+        coverInfo = null;
 			} catch (e) {
 				coverSize = 0;
 			}
 			this.coverStorage = this.formatFileSize(coverSize);
 			totalSize += coverSize;
 			try {
-				const bookInfo = await runAsyncFunc(file.get, { uri: bookInfoUri });
+				let bookInfo = await runAsyncFunc(file.get, { uri: bookInfoUri });
 				indexSize += bookInfo.length;
+        bookInfo = null;
 			} catch (e) { }
 			try {
-				const listInfo = await runAsyncFunc(file.get, { uri: listUri });
+				let listInfo = await runAsyncFunc(file.get, { uri: listUri });
 				indexSize += listInfo.length;
+        listInfo = null;
 			} catch (e) { }
 			this.indexStorage = this.formatFileSize(indexSize);
 			totalSize += indexSize;
@@ -230,10 +236,11 @@ export default {
 		}
 
 		try {
-			const listData = await runAsyncFunc(file.readText, { uri: listUri });
+			let listData = await runAsyncFunc(file.readText, { uri: listUri });
 			const syncedChapters = listData.text.split('\n').filter(Boolean).length;
 			const progress = Math.floor((syncedChapters / totalChapters) * 100);
 			this.syncProgress = `${progress}% (${syncedChapters}/${totalChapters}章)`;
+      listData = null;
 		} catch (e) {
 			this.syncProgress = `0% (0/${totalChapters}章)`;
 		}

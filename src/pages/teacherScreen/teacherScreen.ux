@@ -6,7 +6,7 @@
 			<text style="font-size: 36px;font-weight:bold;color: white;width: 100%;text-align: center;top: 25px;">
 				{{isEnabled ? 'ON' : 'OFF'}}
 			</text>
-            <text style="font-size: 24px; color: white; text-align: left; padding: 20px; lines: 3; margin-top: 35px;">
+            <text static style="font-size: 24px; color: white; text-align: left; padding: 20px; lines: 3; margin-top: 35px;">
                 开启后，阅读时短时间内连续点击三次屏幕自动退出电子书。
 			</text>
 		</div>
@@ -15,7 +15,7 @@
 		<text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 		  {{nowTime}}
 		</text>
-		<text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		<text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 			老师屏
 		</text>
 	</div>
@@ -55,7 +55,10 @@ export default {
         });
 	},
 	onDestroy(){
-	  clearInterval(this.timer);
+	  if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
 	},
     toggleFeature() {
         const targetState = !this.isEnabled;

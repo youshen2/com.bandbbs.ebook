@@ -1,7 +1,7 @@
 <template>
 	<div class="page">
     <scroll scroll-y="{{true}}" bounces="{{true}}" style="position: absolute;width: 432px;height: 514px;">
-      <img src="/common/images/about_img.png" style="width: 100%;position: absolute;left: 48px;top: 40px;"/>
+      <img static src="/common/images/about_img.png" style="width: 100%;position: absolute;left: 48px;top: 40px;"/>
 
       <text style="position: absolute;left: 74px;top: 142px;width: 282px;height: 48px;font-size: 36px;font-weight: bold;color: #FFFFFF;">
         弦{{appName}}
@@ -13,29 +13,19 @@
         {{versionType}}
       </text>
     </scroll>
-    <img src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 102px;" />
+    <img static src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 102px;" />
     <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">{{nowTime}}</text>
-    <text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">关于</text>
-    <img src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+    <text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">关于</text>
+    <img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
 	</div>
   </template>
   
   <script>
   import router from '@system.router'
-  // import configuration from '@system.configuration'
-  // import storage from '@system.storage' 
-  // import prompt from '@system.prompt' 
   import app from '@system.app' 
   import storage from '../../common/storage.js'
-  // import file from '@system.file' 
-  
-  // import { hmUI } from '../../common/utils.js'
-  
-  //let confirm = true;
   
   export default {
-	  // ÷﹢‐+-＋－×÷％
-	// 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
 	private: {
     nowTime:':',
     appName:'弦电子书',
@@ -62,7 +52,10 @@
 	  this.updateTime();
   },
   onDestroy(){
-	  clearInterval(this.timer);
+	  if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
   },
 	back(){
 		router.back();
@@ -105,10 +98,8 @@
     let versionTypeCode = '';
     
     if (parts.length >= 3) {
-      // 提取主版本号
       mainVersion = parts.slice(0, 3).join('.');
       
-      // 版本类型后缀
       if (parts.length > 3) {
         versionTypeCode = parts[3];
       } else if (parts[2].includes('RW') || parts[2].includes('BAND')) {

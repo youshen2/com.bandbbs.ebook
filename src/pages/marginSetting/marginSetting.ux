@@ -6,20 +6,20 @@
 		<div class="preview-screen">
 			<div class="margin-indicator top" style="height: {{verticalMargin / 3}}px;"></div>
 			<div class="content-area">
-				<text class="preview-text" style="opacity:{{opacity/100}};">
+				<text static class="preview-text" style="opacity:{{opacity/100}};">
 					文本内容区域
 				</text>
 			</div>
 			<div class="margin-indicator bottom" style="height: {{verticalMargin / 3}}px;"></div>
 		</div>
 		<div class="info-panel">
-			<text class="info-title">垂直边距</text>
+			<text static class="info-title">垂直边距</text>
 			<text class="info-value">{{verticalMargin}}px</text>
 			<text class="info-desc">上下各留白 {{verticalMargin}}px</text>
 		</div>
 	</div>
 	
-	<number style="position: absolute;top:415px;" max="50" min="0" step="5" value="{{verticalMargin}}" @change="changeMargin" name="调整边距"></number>
+	<number style="position: absolute;top:415px;" max.static="50" min.static="0" step.static="5" value="{{verticalMargin}}" @change="changeMargin" name.static="调整边距"></number>
 
 	<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
 	<img static src="/common/images/info.png" @click="showHelp" style="position: absolute;left: 230px;top: 24px;width: 82px;height: 82px;"/>
@@ -27,7 +27,7 @@
 	<text style="position: absolute;left: 130px;top: 16px;width: 80px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 	  {{nowTime}}
 	</text>
-	<text style="position: absolute;left: 130px;top: 46px;width: 80px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+	<text static style="position: absolute;left: 130px;top: 46px;width: 80px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 		边距
 	</text>
   </div>
@@ -78,7 +78,10 @@ export default {
 		})
   },
   onDestroy(){
-	  clearInterval(this.timer);
+	  if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
 	},
   changeMargin(e){
 	  this.verticalMargin = e.detail.value
@@ -208,4 +211,3 @@ export default {
 	text-align: center;
 }
 </style>
-

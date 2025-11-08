@@ -9,23 +9,23 @@
 		  </text>
 	  </div>
 	  <div class="row" style="top:228px">
-		  <img src="/common/images/num_pad/7.png" @click="onClick('7')"/>
-		  <img src="/common/images/num_pad/8.png" @click="onClick('8')"/>
-		  <img src="/common/images/num_pad/9.png" @click="onClick('9')"/>
+		  <img static src="/common/images/num_pad/7.png" @click="onClick('7')"/>
+		  <img static src="/common/images/num_pad/8.png" @click="onClick('8')"/>
+		  <img static src="/common/images/num_pad/9.png" @click="onClick('9')"/>
 	  </div>
 	  <div class="row" style="top:298px">
-		  <img src="/common/images/num_pad/4.png" @click="onClick('4')"/>
-		  <img src="/common/images/num_pad/5.png" @click="onClick('5')"/>
-		  <img src="/common/images/num_pad/6.png" @click="onClick('6')"/>
+		  <img static src="/common/images/num_pad/4.png" @click="onClick('4')"/>
+		  <img static src="/common/images/num_pad/5.png" @click="onClick('5')"/>
+		  <img static src="/common/images/num_pad/6.png" @click="onClick('6')"/>
 	  </div>
 	  <div class="row" style="top:368px">
-		  <img src="/common/images/num_pad/1.png" @click="onClick('1')"/>
-		  <img src="/common/images/num_pad/2.png" @click="onClick('2')"/>
-		  <img src="/common/images/num_pad/3.png" @click="onClick('3')"/>
+		  <img static src="/common/images/num_pad/1.png" @click="onClick('1')"/>
+		  <img static src="/common/images/num_pad/2.png" @click="onClick('2')"/>
+		  <img static src="/common/images/num_pad/3.png" @click="onClick('3')"/>
 	  </div>
 	  <div class="row" style="top:438px">
-		  <img src="/common/images/num_pad/0.png" @click="onClick('0')"/>
-		  <img src="/common/images/num_pad/del.png" @click="onClick('del')"/>
+		  <img static src="/common/images/num_pad/0.png" @click="onClick('0')"/>
+		  <img static src="/common/images/num_pad/del.png" @click="onClick('del')"/>
 	  </div>
   
   
@@ -34,7 +34,7 @@
 	  <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 		{{nowTime}}
 	  </text>
-	  <text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+	  <text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 		  跳转章节
 	  </text>
 	</div>
@@ -77,9 +77,9 @@
 	async loadData() {
         const listUri = `internal://files/books/${this.name}/list.txt`;
         try {
-            const listData = await new Promise((resolve, reject) => file.readText({ uri: listUri, success: resolve, fail: reject }));
+            let listData = await new Promise((resolve, reject) => file.readText({ uri: listUri, success: resolve, fail: reject }));
             const lines = listData.text.split('\n').filter(Boolean);
-            
+            listData = null;
             
             const chapterMap = new Map();
             for (const line of lines) {
@@ -89,10 +89,8 @@
                         chapterMap.set(chapter.index, chapter);
                     }
                 } catch (e) {
-                    
                 }
             }
-            
             
             this.allChapters = Array.from(chapterMap.values()).sort((a, b) => a.index - b.index);
             this.totalChapters = this.allChapters.length;
@@ -101,13 +99,14 @@
             this.totalChapters = 0;
         }
 
-		const progress = await bookStorage.get(this.name);
+		let progress = await bookStorage.get(this.name);
 		if (progress.chapterIndex !== null) {
 			const chapterArrayIndex = this.allChapters.findIndex(c => c.index === progress.chapterIndex);
 			this.inputPage = (chapterArrayIndex + 1).toString();
 		} else {
 			this.inputPage = '1';
 		}
+    progress = null;
 	},
 	onDestroy(){
 		if (this.timer) {
@@ -139,11 +138,12 @@
 		  const targetChapterIndex = this.allChapters[targetChapterNum - 1].index;
 		  
 		  try {
-			  const progress = await bookStorage.get(this.name);
+			  let progress = await bookStorage.get(this.name);
 			  progress.chapterIndex = targetChapterIndex;
 			  progress.offsetInChapter = 0;
 			  progress.scrollOffset = 0;
 			  await bookStorage.set(this.name, progress);
+        progress = null;
 			  
 			  prompt.showToast({ message: '设置成功', duration: 1000 });
 			  globalThis.justJumpedFromPageNumber = true;

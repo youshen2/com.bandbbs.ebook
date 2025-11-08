@@ -3,58 +3,58 @@
 	  <list class="list">
 		  <list-item class="item" @click="routerTo('list')" type="item">
 			  <div class="item-content">
-				  <text class="itemtext">章节列表</text>
-				  <text class="itemtext2">查看或跳转章节</text>
+				  <text class="itemtext" static>章节列表</text>
+				  <text class="itemtext2" static>查看或跳转章节</text>
 			  </div>
-			  <img src="/common/images/enter.png" style="width:40px;height: 40px;"/>
+			  <img src="/common/images/enter.png" style="width:40px;height: 40px;" static/>
 		  </list-item>
 		  <list-item type="item" class="item" @click="routerTo('readPresent')">
 			  <div class="item-content">
-				  <text class="itemtext">跳转章节</text>
-				  <text class="itemtext2">按章节号跳转</text>
+				  <text class="itemtext" static>跳转章节</text>
+				  <text class="itemtext2" static>按章节号跳转</text>
 			  </div>
-			  <img src="/common/images/enter.png" style="width:40px;height: 40px;"/>
+			  <img src="/common/images/enter.png" style="width:40px;height: 40px;" static/>
 		  </list-item>
 		  <list-item class="item" @click="routerTo('bookmarks')" type="item">
 			  <div class="item-content">
-				  <text class="itemtext">书签管理</text>
-				  <text class="itemtext2">查看或跳转书签</text>
+				  <text class="itemtext" static>书签管理</text>
+				  <text class="itemtext2" static>查看或跳转书签</text>
 			  </div>
-			  <img src="/common/images/enter.png" style="width:40px;height: 40px;"/>
+			  <img src="/common/images/enter.png" style="width:40px;height: 40px;" static/>
 		  </list-item>
 		  <list-item class="item" @click="toggleKeepScreenOnClick" type="item">
 			<div class="item-content">
-				<text class="itemtext">屏幕常亮</text>
-				<text class="itemtext2">阅读器保持常亮</text>
+				<text class="itemtext" static>屏幕常亮</text>
+				<text class="itemtext2" static>阅读器保持常亮</text>
 			</div>
 			<img src="{{isKeepScreenOn ? '/common/images/Switch_ON.png' : '/common/images/Switch_OFF.png'}}" style="width:64px;height: 40px;"/>
 		</list-item>
 		  <list-item type="item" class="item" @click="backToFirst">
 			  <div class="item-content">
-				  <text class="itemtext">回到第一段</text>
-				  <text class="itemtext2">跳转到本章开头</text>
+				  <text class="itemtext" static>回到第一段</text>
+				  <text class="itemtext2" static>跳转到本章开头</text>
 			  </div>
 		  </list-item>
 		  <list-item class="item" @click="routerTo('more')" type="item">
 			<div class="item-content">
-				<text class="itemtext">全局设置</text>
-				<text class="itemtext2">打开全局设置</text>
+				<text class="itemtext" static>全局设置</text>
+				<text class="itemtext2" static>打开全局设置</text>
 			</div>
-			<img src="/common/images/enter.png" style="width:40px;height: 40px;"/>
+			<img src="/common/images/enter.png" style="width:40px;height: 40px;" static/>
 		</list-item>
 		  <list-item class="item" @click="del" type="item">
 			  <div class="item-content">
-				  <text class="itemtext">删除书籍</text>
-				  <text class="itemtext2">删除当前书籍</text>
+				  <text class="itemtext" static>删除书籍</text>
+				  <text class="itemtext2" static>删除当前书籍</text>
 			  </div>
-			  <img src="/common/images/enter.png" style="width:40px;height: 40px;"/>
+			  <img src="/common/images/enter.png" style="width:40px;height: 40px;" static/>
 		  </list-item>
 		  <list-item class="item" @click="routerTo('bookinfo')" type="item">
 			  <div class="item-content">
-				  <text class="itemtext">书籍详情</text>
-				  <text class="itemtext2">封面、占用空间等</text>
+				  <text class="itemtext" static>书籍详情</text>
+				  <text class="itemtext2" static>封面、占用空间等</text>
 			  </div>
-			  <img src="/common/images/enter.png" style="width:40px;height: 40px;"/>
+			  <img src="/common/images/enter.png" style="width:40px;height: 40px;" static/>
 		  </list-item>
 	  </list>
   
@@ -64,7 +64,7 @@
 	  <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 		{{nowTime}}
 	  </text>
-	  <text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+	  <text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 		  菜单
 	  </text>
 	</div>
@@ -106,7 +106,10 @@
 	  }, 1000);
 	},
 	onDestroy(){
-		clearInterval(this.timer);
+		if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
 	},
 	onReady(){
 	},
@@ -150,10 +153,11 @@
 	},
 	async backToFirst(){
 		try {
-			const progress = await bookStorage.get(this.name);
+			let progress = await bookStorage.get(this.name);
 			progress.offsetInChapter = 0;
 			progress.scrollOffset = 0;
 			await bookStorage.set(this.name, progress);
+      progress = null;
 			
 			prompt.showToast({ message: '已跳转到第一段', duration: 1500 });
 			globalThis.justJumpedFromPageNumber = true;

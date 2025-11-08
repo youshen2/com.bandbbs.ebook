@@ -4,15 +4,15 @@
 	  <list class="list">
 		<list-item class="item {{onSelect==1?'item2':''}}" @click="select('1')" type="item">
 			<div class="item-content">
-				<text class="itemtext">24小时制</text>
-				<text class="itemtext2">例如：13:45</text>
+				<text class="itemtext" static>24小时制</text>
+				<text class="itemtext2" static>例如：13:45</text>
 			</div>
 			<img src="/common/images/check.png" style="width:40px;height: 40px;" if="{{onSelect==1}}"/>
 		</list-item>
 		  <list-item class="item {{onSelect==2?'item2':''}}" @click="select('2')" type="item">
 			<div class="item-content">
-				<text class="itemtext">12小时制</text>
-				<text class="itemtext2">例如：下午 1:45</text>
+				<text class="itemtext" static>12小时制</text>
+				<text class="itemtext2" static>例如：下午 1:45</text>
 			</div>
 			  <img src="/common/images/check.png" style="width:40px;height: 40px;" if="{{onSelect==2}}"/>
 		  </list-item>
@@ -25,7 +25,7 @@
 		<text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
 		  {{nowTime}}
 		</text>
-		<text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+		<text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 			时间格式
 		</text>
 	</div>
@@ -85,7 +85,10 @@
         });
 	},
 	onDestroy(){
-		clearInterval(this.timer);
+		if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
 	},
 	onShow(){
 	  storage.get({

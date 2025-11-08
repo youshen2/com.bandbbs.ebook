@@ -10,7 +10,7 @@
             {{title}}
         </text>
 
-        <img src="/common/images/bin.png" style="position: absolute;left: 152px;top: 156px;width: 128px;height: 128px;" />
+        <img static src="/common/images/bin.png" style="position: absolute;left: 152px;top: 156px;width: 128px;height: 128px;" />
         <text style="position: absolute;left: 0px;top: 319px;width: 432px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">{{confirmText}}</text>
         <text style="position: absolute;left: 0px;top: 361px;width: 432px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;padding:0 20px;">{{subText}}</text>
     </div>
@@ -54,7 +54,10 @@ export default {
         }, 1000);
     },
     onDestroy() {
-        clearInterval(this.timer);
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
     },
     back() {
         if (this.action === 'versionError') {
@@ -86,13 +89,15 @@ export default {
         }
 
         try {
-            const progress = await bookStorage.get(this.bookName);
+            let progress = await bookStorage.get(this.bookName);
             if (progress.bookmarks && progress.bookmarks[this.bookmarkIndex] !== undefined) {
                 progress.bookmarks.splice(this.bookmarkIndex, 1);
                 await bookStorage.set(this.bookName, progress);
+                progress = null;
                 prompt.showToast({ message: '删除成功' });
                 router.back();
             } else {
+                progress = null;
                 prompt.showToast({ message: '找不到书签' });
                 router.back();
             }
@@ -127,8 +132,9 @@ export default {
             uri: BOOKSHELF_URI,
             success: function(data) {
                 try {
-                    const bookshelf = JSON.parse(data.text);
+                    let bookshelf = JSON.parse(data.text);
                     const newBookshelf = bookshelf.filter(b => b.dirName !== dirName);
+                    bookshelf = null;
                     file.writeText({
                         uri: BOOKSHELF_URI,
                         text: JSON.stringify(newBookshelf),

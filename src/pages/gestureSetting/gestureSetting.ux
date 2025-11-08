@@ -188,4 +188,8 @@
 	flex-direction: column;
 	justify-content: space-between;
 }
+
+.item2 {
+	background-color: #0D6EFF;
+}
   </style>

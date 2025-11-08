@@ -202,6 +202,10 @@
 }
 
 
+.item2 {
+	background-color: #0D6EFF;
+}
+
 .item-content {
 	height: 100%;
 	flex:1;

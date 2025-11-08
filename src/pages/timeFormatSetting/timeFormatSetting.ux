@@ -34,6 +34,7 @@
   <script>
   import router from '@system.router'
   import storage from '../../common/storage.js'
+  import app from '@system.app'
 
   const TIME_FORMAT_KEY = 'EBOOK_TIME_FORMAT';
   const DEFAULT_TIME_FORMAT = '24h';
@@ -154,6 +155,9 @@
 	border-radius: 36px;
 	align-items: center;
   justify-content: space-between;
+}
+.item2 {
+	background-color: #0D6EFF;
 }
 .itemtext {
 	font-size: 32px;

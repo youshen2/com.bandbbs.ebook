@@ -29,10 +29,10 @@
 			</div>
 		</div>
 	  </scroll>
-		<img show="{{showSetting}}" src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 122px;" />
+		<img show="{{showSetting || alwaysShowTime}}" src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 122px;" />
 		<img show="{{showSetting}}" src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
 		<img show="{{showSetting}}" src="/common/images/more.png" @click="gotoSetting" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
-		<div show="{{showSetting}}" style="position: absolute; left: 130px; top: 8px; width: 172px; flex-direction: column; align-items: center;">
+		<div show="{{showSetting || alwaysShowTime}}" style="position: absolute; left: 130px; top: 8px; width: 172px; flex-direction: column; align-items: center;">
 			<text style="line-height: 24px; font-weight: bold; font-size: 20px; color: rgba(255,255,255,0.6); text-align: center;">
 				{{batteryLevel}}
 			</text>
@@ -140,7 +140,8 @@
 		preventParagraphSplitting: false,
         saveMode: 'exit',
         saveIntervalValue: 10,
-        saveIntervalId: null
+        saveIntervalId: null,
+        alwaysShowTime: false
 	  },
 	  protected: {
 		name: '',
@@ -248,7 +249,8 @@
 			{ key: 'EBOOK_PREVENT_PARAGRAPH_SPLITTING', prop: 'preventParagraphSplitting', type: 'bool', default: false },
 			{ key: 'EBOOK_TIME_FORMAT', prop: 'timeFormat', type: 'string', default: '24h' },
             { key: 'EBOOK_PROGRESS_SAVE_MODE', prop: 'saveMode', type: 'string', default: 'exit' },
-            { key: 'EBOOK_PROGRESS_SAVE_INTERVAL', prop: 'saveIntervalValue', type: 'int', default: 10 }
+            { key: 'EBOOK_PROGRESS_SAVE_INTERVAL', prop: 'saveIntervalValue', type: 'int', default: 10 },
+            { key: 'EBOOK_ALWAYS_SHOW_TIME', prop: 'alwaysShowTime', type: 'bool', default: false }
 		];
 	
 		const promises = settingsConfig.map(s => getSetting(s.key, s.default));

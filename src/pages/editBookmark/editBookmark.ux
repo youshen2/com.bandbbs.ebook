@@ -2,8 +2,8 @@
 <template>
     <div class="page">
         <img static src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 336px;height: 102px;" />
-        <img static src="/common/images/back.png" @click="back" style="position: absolute;left: 6px;top: 6px;width: 72px;height: 72px;"/>
-        <img static src="/common/images/conform.png" @click="save" style="position: absolute;left: 258px;top: 6px;width: 72px;height: 72px;"/>
+        <img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+        <img static src="/common/images/conform.png" @click="save" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
         <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
             {{nowTime}}
         </text>

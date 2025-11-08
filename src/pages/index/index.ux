@@ -162,7 +162,7 @@ export default {
                     });
                 }
                 that.allBooks = books;
-                that.loadPage(0);
+                that.updateBooksWithProgress();
                 books = null;
             } catch (e) {
                 that.allBooks = [];

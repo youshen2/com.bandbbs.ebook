@@ -186,7 +186,7 @@
 		globalThis.isKeepScreenOn = this.isKeepScreenOn;
 	},
 	async onShow(){
-		this.loadSettings();
+		await this.loadSettings();
 		this.updateBatteryStatus();
 		if (typeof globalThis.isKeepScreenOn !== 'undefined') {
 			if (this.isKeepScreenOn !== globalThis.isKeepScreenOn) {
@@ -213,79 +213,56 @@
             this.isInitialized = true;
         }
 	},
-	loadSettings() {
-		const settings = [
-			{ key: 'EBOOK_TXTSZPAGE', type: 'int', prop: 'txtSizePage' },
-			{ key: 'EBOOK_VERTICAL_MARGIN', type: 'int', prop: 'verticalMargin', callback: this.updateScrollHeight },
-			{ key: 'EBOOK_FONT', type: 'int', prop: 'fontSize', callback: () => { 
-				this.lineHeight = parseInt((-0.01)*(this.fontSize**2) + 1.62*this.fontSize - 3.23);
-				this.updateScrollHeight();
-			}},
-			{ key: 'EBOOK_OPACITY', type: 'int', prop: 'opacity' },
-			{ key: 'EBOOK_SWIPE', type: 'string', prop: 'swipe' },
-			{ key: 'EBOOK_AUTO', type: 'json', prop: 'auto', process: (data) => { if (data && data.enable) return data.speed; }},
-			{ key: 'EBOOK_SHOW_PROGRESS_BAR', type: 'bool', prop: 'showProgressBar' },
-			{ key: 'EBOOK_PROGRESS_BAR_HEIGHT', type: 'int', prop: 'progressBarHeight' },
-			{ key: 'EBOOK_GESTURE', type: 'string', prop: 'gestureMode', defaultValue: 'single' },
-			{ key: 'EBOOK_CHAPTER_SWITCH_HEIGHT', type: 'int', prop: 'chapterSwitchHeight' },
-			{ key: 'EBOOK_CHAPTER_SWITCH_SENSITIVITY', type: 'int', prop: 'chapterSwitchSensitivity' },
-			{ key: 'EBOOK_SWIPE_SENSITIVITY', type: 'int', prop: 'swipeSensitivity' },
-			{ key: 'EBOOK_CHAPTER_SWITCH_STYLE', type: 'string', prop: 'chapterSwitchStyle', defaultValue: 'button' },
-			{ key: 'EBOOK_AUTO_READ_DISTANCE', type: 'int', prop: 'autoReadDistance', defaultValue: 100 },
-			{ key: 'EBOOK_PREVENT_PARAGRAPH_SPLITTING', type: 'bool', prop: 'preventParagraphSplitting' }
-		];
-
-        storage.get({
-            key: 'EBOOK_TIME_FORMAT',
-            success: (data) => {
-                if(data) this.timeFormat = data;
-            }
-        });
-	
-		let index = 0;
-		const loadNextSetting = () => {
-			if (index >= settings.length) return;
-	
-			const setting = settings[index];
+	async loadSettings() {
+		const getSetting = (key, defaultValue) => new Promise(resolve => {
 			storage.get({
-				key: setting.key,
-				success: (data) => {
-					if (data !== null && data !== '') {
-						switch (setting.type) {
-							case 'int':
-								this[setting.prop] = parseInt(data);
-								break;
-							case 'bool':
-								this[setting.prop] = data === 'true';
-								break;
-							case 'json':
-								const parsedData = JSON.parse(data);
-								const processedData = setting.process ? setting.process(parsedData) : parsedData;
-								if (processedData) this[setting.prop] = processedData;
-								break;
-							default:
-								this[setting.prop] = data;
-								break;
-						}
-					} else if (setting.defaultValue) {
-						this[setting.prop] = setting.defaultValue;
-					}
-					if (setting.callback) setting.callback();
-				},
-				fail: () => {
-					if (setting.defaultValue) {
-						this[setting.prop] = setting.defaultValue;
-						if (setting.callback) setting.callback();
-					}
-				},
-				complete: () => {
-					index++;
-					loadNextSetting();
-				}
+				key,
+				success: data => resolve(data !== null && data !== '' ? data : defaultValue),
+				fail: () => resolve(defaultValue)
 			});
-		};
+		});
 	
-		loadNextSetting();
+		const settingsConfig = [
+			{ key: 'EBOOK_TXTSZPAGE', prop: 'txtSizePage', type: 'int', default: 400 },
+			{ key: 'EBOOK_VERTICAL_MARGIN', prop: 'verticalMargin', type: 'int', default: 10 },
+			{ key: 'EBOOK_FONT', prop: 'fontSize', type: 'int', default: 30 },
+			{ key: 'EBOOK_OPACITY', prop: 'opacity', type: 'int', default: 100 },
+			{ key: 'EBOOK_SWIPE', prop: 'swipe', type: 'string', default: 'column' },
+			{ key: 'EBOOK_AUTO', prop: 'auto', type: 'json', default: null },
+			{ key: 'EBOOK_SHOW_PROGRESS_BAR', prop: 'showProgressBar', type: 'bool', default: true },
+			{ key: 'EBOOK_PROGRESS_BAR_HEIGHT', prop: 'progressBarHeight', type: 'int', default: 8 },
+			{ key: 'EBOOK_GESTURE', prop: 'gestureMode', type: 'string', default: 'single' },
+			{ key: 'EBOOK_CHAPTER_SWITCH_HEIGHT', prop: 'chapterSwitchHeight', type: 'int', default: 80 },
+			{ key: 'EBOOK_CHAPTER_SWITCH_SENSITIVITY', prop: 'chapterSwitchSensitivity', type: 'int', default: 50 },
+			{ key: 'EBOOK_SWIPE_SENSITIVITY', prop: 'swipeSensitivity', type: 'int', default: 80 },
+			{ key: 'EBOOK_CHAPTER_SWITCH_STYLE', prop: 'chapterSwitchStyle', type: 'string', default: 'button' },
+			{ key: 'EBOOK_AUTO_READ_DISTANCE', prop: 'autoReadDistance', type: 'int', default: 100 },
+			{ key: 'EBOOK_PREVENT_PARAGRAPH_SPLITTING', prop: 'preventParagraphSplitting', type: 'bool', default: false },
+			{ key: 'EBOOK_TIME_FORMAT', prop: 'timeFormat', type: 'string', default: '24h' }
+		];
+	
+		const promises = settingsConfig.map(s => getSetting(s.key, s.default));
+		const results = await Promise.all(promises);
+	
+		results.forEach((data, i) => {
+			const config = settingsConfig[i];
+			let value = data;
+			
+			switch (config.type) {
+				case 'int': this[config.prop] = parseInt(value); break;
+				case 'bool': this[config.prop] = value === 'true' || value === true; break;
+				case 'json': 
+					if (value) {
+						const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+						if(parsed && parsed.enable) this.auto = parsed.speed;
+					}
+					break;
+				default: this[config.prop] = value; break;
+			}
+		});
+	
+		this.lineHeight = parseInt((-0.01)*(this.fontSize**2) + 1.62*this.fontSize - 3.23);
+		this.updateScrollHeight();
 	},
 	updateContentHeight() {
 		setTimeout(() => {
@@ -369,15 +346,16 @@
 		
 		if (this.page1) {
 			this.page1.text = null;
-			this.page1 = null;
 		}
 		if (this.page2) {
 			this.page2.text = null;
-			this.page2 = null;
 		}
-		
+		let oldPage1 = this.page1;
+		let oldPage2 = this.page2;
 		this.page1 = { text: "", offset: 0, length: 0 };
 		this.page2 = null;
+		oldPage1 = null;
+		oldPage2 = null;
 		
 		this.isAtChapterStart = false;
 		this.isAtChapterEnd = false;
@@ -569,12 +547,13 @@
 			success: function(rect){
 				let removedHeight = rect.height;
 				
-				if (that.page1 && that.page1 !== that.page2) {
-					that.page1.text = null;
+				let oldPage1 = that.page1;
+				if (oldPage1 && oldPage1 !== that.page2) {
+					oldPage1.text = null;
 				}
-				
-				that.page1 = that.page2 || that.page1;
+				that.page1 = that.page2 || oldPage1;
 				that.page2 = nextPageData;
+				oldPage1 = null;
 				
 				const newScrollPos = scrollPosBeforeLoad - removedHeight + that.lineHeight;
 				that.scrollTopValue = newScrollPos;
@@ -608,12 +587,14 @@
 			if(str){
 				const prevPageData = { text: str, offset: newOffset, length: bytesRead };
 				
-				if (that.page2) {
-					that.page2.text = null;
+				let oldPage2 = that.page2;
+				if (oldPage2) {
+					oldPage2.text = null;
 				}
-				
 				that.page2 = that.page1;
 				that.page1 = prevPageData;
+				oldPage2 = null;
+
 				that.$element("page1").getBoundingClientRect({
 					success: function(rect){
 						const newScrollPos = that.currentScrollTop + rect.height;
@@ -690,90 +671,62 @@
 		}
 	},
 	goToPrevChapter() {
-		if (this.wait) return;
-		this.wait = true;
-
-		const prevChapterIndex = this.currentChapterIndexInAll - 1;
-		if (prevChapterIndex < 0) {
-			prompt.showToast({ message: '已是第一章' });
-			this.wait = false;
-			return;
-		}
-		
-		this.isAtChapterEnd = false;
-
-		this.loadChapter(prevChapterIndex, () => {
-			this.loadLastSegmentsAndScrollToEnd();
-		});
-	},
-	loadLastSegmentsAndScrollToEnd() {
-        const that = this;
+        if (this.wait) return;
         this.wait = true;
 
-        let offset2 = Math.max(0, this.allSize - (this.txtSizePage * 2));
-        let offset1 = Math.max(0, offset2 - (this.txtSizePage * 2));
-        
-        if (offset1 === offset2 && this.allSize > 0) {
-            offset1 = 0;
-            offset2 = -1;
-        } else if (offset1 === offset2) {
-            this.page1 = { text: "", offset: 0, length: 0 };
-            this.page2 = null;
-            this.isAtChapterEnd = true;
-            this.isAtChapterStart = true;
+        const prevChapterIndex = this.currentChapterIndexInAll - 1;
+        if (prevChapterIndex < 0) {
+            prompt.showToast({ message: '已是第一章' });
             this.wait = false;
             return;
         }
+        
+        this.isAtChapterEnd = false;
 
-        this.currentFileOffset = offset1;
+        let oldPage1 = this.page1;
+        let oldPage2 = this.page2;
+        this.page1 = null;
+        this.page2 = null;
+        oldPage1 = null;
+        oldPage2 = null;
 
-        this.readFileText(offset1, function(str1, bytesRead1) {
-            that.page1 = { text: str1, offset: offset1, length: bytesRead1 };
-
-            if (offset2 === -1 || offset2 >= that.allSize) {
-                that.page2 = null;
-                that.isAtChapterEnd = true;
-                that.scrollToEnd();
-				that.updateContentHeight();
-                return;
-            }
-
-            that.readFileText(offset2, function(str2, bytesRead2) {
-                if (str2) {
-                    that.page2 = { text: str2, offset: offset2, length: bytesRead2 };
-                } else {
-                    that.page2 = null;
-                }
-                that.isAtChapterEnd = true;
-                that.scrollToEnd();
-				that.updateContentHeight();
-            });
+        this.loadChapter(prevChapterIndex, () => {
+            this.loadEndAndScroll();
         });
     },
-    scrollToEnd() {
-        setTimeout(() => {
-            this.$element("contentContainer").getBoundingClientRect({
-                success: (rect) => {
-                    const contentHeight = rect.height;
-                    const scrollPos = contentHeight - this.scrollHeight;
-                    const finalScrollTop = scrollPos > 0 ? scrollPos : 0;
+    loadEndAndScroll() {
+        this.wait = true;
+        const readSize = this.txtSizePage * 3;
+        const readOffset = Math.max(0, this.allSize - readSize);
 
-                    this.scrollTopValue = finalScrollTop - 1;
+        this.currentFileOffset = readOffset;
 
-                    setTimeout(() => {
-                        this.scrollTopValue = finalScrollTop;
-                        this.currentScrollTop = finalScrollTop;
+        this.readFileText(readOffset, (str, bytesRead) => {
+            if (this.page1) this.page1.text = null;
+            if (this.page2) this.page2.text = null;
+            this.page2 = null;
+            
+            this.page1 = { text: str, offset: readOffset, length: bytesRead };
+            this.isAtChapterEnd = true;
+            this.isAtChapterStart = (readOffset === 0);
+
+            this.updateContentHeight();
+            
+            setTimeout(() => {
+                this.$element("contentContainer").getBoundingClientRect({
+                    success: (rect) => {
+                        const contentHeight = rect.height;
+                        const scrollPos = contentHeight - this.scrollHeight;
+                        this.scrollTopValue = scrollPos > 0 ? scrollPos : 0;
+                        this.currentScrollTop = this.scrollTopValue;
                         this.wait = false;
-                        this.isAtChapterStart = this.scrollTopValue < 10 && this.currentFileOffset === 0;
                         this.updateChapterProgress();
                         this.saveData(true);
-                    }, 50);
-                },
-                fail: () => {
-                    this.wait = false;
-                }
-            });
-        }, 150);
+                    },
+                    fail: () => { this.wait = false; }
+                });
+            }, 150);
+        });
     },
 	goToNextChapter() {
 		if (this.wait) return;
@@ -826,93 +779,67 @@
 		if (!this.name || this.totalChapters === 0) return;
 		
 		try {
+			const chapter = await chapterManager.getChapterByArrayIndex(this.name, this.currentChapterIndexInAll);
+			if (!chapter || chapter.index === undefined) return;
+	
+			let progress = await bookStorage.get(this.name);
+			progress.chapterIndex = chapter.index;
+			progress.offsetInChapter = this.currentFileOffset;
+			progress.scrollOffset = this.currentScrollTop;
 			
-			const savePromise = this._performSaveInternal();
-			const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 500));
-			await Promise.race([savePromise, timeoutPromise]);
+			await bookStorage.set(this.name, progress);
+			progress = null;
 		} catch (e) {
 		}
 	},
-	async _performSaveInternal() {
+	async updateBookshelf() {
 		if (!this.name || this.totalChapters === 0) return;
-		
-		const chapter = await chapterManager.getChapterByArrayIndex(this.name, this.currentChapterIndexInAll);
-		if (!chapter) return;
-		
-		const totalChapters = this.totalChapters;
-		const chapterIndex = chapter.index;
-		if (chapterIndex === undefined) return;
-		
-		const offsetInChapter = this.currentFileOffset;
-		const scrollOffset = this.currentScrollTop;
-
-		let progressPercent = 0;
-		let progressMeta = await progressCalculator.getProgressMeta(this.name);
-
-		if (progressMeta && progressMeta.totalSize > 0) {
-			const chapterMeta = progressMeta.chapters.find(c => c.index === chapterIndex);
-			if (chapterMeta) {
-				const readSize = chapterMeta.offset + offsetInChapter;
-				progressPercent = parseFloat(((readSize / progressMeta.totalSize) * 100).toFixed(2));
-			} else {
-				progressPercent = totalChapters > 0 ? parseFloat(((this.currentChapterIndexInAll + 1) / totalChapters * 100).toFixed(2)) : 0;
-			}
-		} else {
-			progressPercent = totalChapters > 0 ? parseFloat(((this.currentChapterIndexInAll + 1) / totalChapters * 100).toFixed(2)) : 0;
-			if (!progressMeta) {
-				progressCalculator.calculateAndSaveProgressMeta(this.name);
-			}
-		}
-    progressMeta = null;
-		
-		let progress;
+	
 		try {
-			progress = await bookStorage.get(this.name);
-		} catch (e) {
-			progress = { chapterIndex: null, offsetInChapter: 0, scrollOffset: 0, bookmarks: [], p: 0 };
-		}
-		
-		progress.chapterIndex = chapterIndex;
-		progress.offsetInChapter = offsetInChapter;
-		progress.scrollOffset = scrollOffset;
-		progress.p = progressPercent;
-		
-		await bookStorage.set(this.name, progress);
-    progress = null;
-		
-		this._updateBookshelfAsync(progressPercent);
-	},
-	_updateBookshelfAsync(progressPercent) {
-		setTimeout(async () => {
-			try {
-				const bookshelfUri = 'internal://files/books/bookshelf.json';
-				let data = await new Promise((resolve, reject) => {
-					file.readText({
-						uri: bookshelfUri, 
-						success: resolve, 
-						fail: reject,
-						timeout: 300
-					});
-				});
-				let bookshelf = JSON.parse(data.text);
-        data = null;
-				const bookIndex = bookshelf.findIndex(b => b.dirName === this.name);
-				if (bookIndex > -1) {
-					bookshelf[bookIndex].progress = progressPercent;
-					await new Promise((resolve, reject) => {
-						file.writeText({
-							uri: bookshelfUri, 
-							text: JSON.stringify(bookshelf), 
-							success: resolve, 
-							fail: reject,
-							timeout: 300
-						});
-					});
-          bookshelf = null;
+			const chapter = await chapterManager.getChapterByArrayIndex(this.name, this.currentChapterIndexInAll);
+			if (!chapter || chapter.index === undefined) return;
+	
+			const chapterIndex = chapter.index;
+			const offsetInChapter = this.currentFileOffset;
+			
+			let progressPercent = 0;
+			let progressMeta = await progressCalculator.getProgressMeta(this.name);
+	
+			if (progressMeta && progressMeta.totalSize > 0) {
+				const chapterMeta = progressMeta.chapters.find(c => c.index === chapterIndex);
+				if (chapterMeta) {
+					const readSize = chapterMeta.offset + offsetInChapter;
+					progressPercent = parseFloat(((readSize / progressMeta.totalSize) * 100).toFixed(2));
 				}
-			} catch (e) {
 			}
-		}, 0);
+			
+			if (progressPercent === 0) { 
+				progressPercent = this.totalChapters > 0 ? parseFloat(((this.currentChapterIndexInAll + 1) / this.totalChapters * 100).toFixed(2)) : 0;
+				if (!progressMeta) {
+					progressCalculator.calculateAndSaveProgressMeta(this.name).catch(()=>{});
+				}
+			}
+			progressMeta = null;
+	
+			let progress = await bookStorage.get(this.name);
+			progress.p = progressPercent;
+			await bookStorage.set(this.name, progress);
+			progress = null;
+	
+			const bookshelfUri = 'internal://files/books/bookshelf.json';
+			let data = await new Promise((resolve, reject) => file.readText({uri: bookshelfUri, success: resolve, fail: reject, timeout: 500})).catch(()=>null);
+			if (!data) return;
+	
+			let bookshelf = JSON.parse(data.text);
+			data = null;
+			const bookIndex = bookshelf.findIndex(b => b.dirName === this.name);
+			if (bookIndex > -1) {
+				bookshelf[bookIndex].progress = progressPercent;
+				await new Promise((resolve, reject) => file.writeText({uri: bookshelfUri, text: JSON.stringify(bookshelf), success: resolve, fail: reject, timeout: 500})).catch(()=>{});
+				bookshelf = null;
+			}
+		} catch (e) {
+		}
 	},
 	onHide(){ 
 		if (this.saveDataTimeout) {
@@ -924,7 +851,9 @@
 			this.autoInterval = null; 
 		}
 		
-		this.saveData(true); 
+		this._performSave().then(() => {
+			this.updateBookshelf();
+		});
 		
 		brightness.setKeepScreenOn({ keepScreenOn: false }); 
 	},
@@ -955,12 +884,8 @@
 		}
 		
 		try {
-			if (this.name && this.totalChapters > 0) {
-				const chapter = await chapterManager.getChapterByArrayIndex(this.name, this.currentChapterIndexInAll);
-				if (chapter && chapter.index !== undefined) {
-					this._performSave().catch(e => {});
-				}
-			}
+			await this._performSave();
+			await this.updateBookshelf();
 		} catch (e) {
 		}
 		
@@ -996,7 +921,9 @@
 			this.autoInterval = null; 
 		}
 		
-		this._performSave().catch(e => {});
+		this._performSave().then(() => {
+			this.updateBookshelf();
+		});
 		
 		setTimeout(() => {
 			router.back();
@@ -1025,7 +952,7 @@
 		
 		try {
 			await Promise.race([
-				this._performSave(),
+				this._performSave().then(() => this.updateBookshelf()),
 				new Promise(resolve => setTimeout(resolve, 200))
 			]);
 		} catch (e) {

@@ -142,7 +142,8 @@
         saveIntervalId: null,
         alwaysShowTime: false,
 		alwaysShowTimeSensitivity: 50,
-		isNearTopForHd: false
+		isNearTopForHd: false,
+		allChapters: []
 	  },
 	  protected: {
 		name: '',
@@ -175,7 +176,7 @@
 	  },
 	updatePageNumber(){
 		this.currentPage = this.currentChapterIndexInAll + 1;
-		this.totalPages = this.totalChapters;
+		this.totalPages = this.allChapters.length;
 	},
 	onInit(){
 		this.updateTime();
@@ -292,6 +293,19 @@
 		this.pageHeigh = Math.floor(this.scrollHeight/this.lineHeight) * this.lineHeight;
 	},
 	async loadBook() {
+		try {
+			this.allChapters = await chapterManager.loadChapterList(this.name);
+		} catch (e) {
+			prompt.showToast({ message: '章节列表加载失败' });
+			this.allChapters = [];
+			return;
+		}
+
+		if (!this.allChapters || this.allChapters.length === 0) {
+			this.page1 = { text: "本书没有内容", offset: 0, length: 0 };
+			return;
+		}
+
 		let progress = await bookStorage.get(this.name);
 		let chapterToLoadIndex;
 		let offsetInChapter = 0;
@@ -316,7 +330,7 @@
 			offsetInChapter = progress.offsetInChapter || 0;
 			scrollOffset = progress.scrollOffset || 0;
 		} else {
-			chapterToLoadIndex = 0;
+			chapterToLoadIndex = this.allChapters[0].index;
 		}
 
      if (progress.txtSizePage) {
@@ -330,17 +344,12 @@
 
      progress = null;
 
-		let chapterInfo = await chapterManager.getChapterInfo(this.name, chapterToLoadIndex);
-
-		if (!chapterInfo || !chapterInfo.chapter) {
-			this.page1 = { text: "本书没有内容", offset: 0, length: 0 };
-      chapterInfo = null;
-			return;
+		let chapterArrayIndex = this.allChapters.findIndex(c => c.index === chapterToLoadIndex);
+		if (chapterArrayIndex === -1) {
+			chapterToLoadIndex = this.allChapters[0].index;
+			chapterArrayIndex = 0;
 		}
-
-		this.totalChapters = chapterInfo.totalChapters;
-		const chapterArrayIndex = chapterInfo.chapterArrayIndex;
-    chapterInfo = null;
+		this.totalChapters = this.allChapters.length;
 		
 		this.currentFileOffset = offsetInChapter;
 		this.savedScrollOffset = scrollOffset;
@@ -358,12 +367,12 @@
 		});
 	},
 	async loadChapter(chapterIdxInAll, callback) {
-		if (chapterIdxInAll < 0) {
+		if (!this.allChapters || chapterIdxInAll < 0 || chapterIdxInAll >= this.allChapters.length) {
 			if(callback) callback();
 			return;
 		}
 
-		const chapter = await chapterManager.getChapterByArrayIndex(this.name, chapterIdxInAll);
+		const chapter = this.allChapters[chapterIdxInAll];
 		if (!chapter) {
 			if(callback) callback();
 			return;
@@ -445,65 +454,22 @@
 		if(readOffset >= this.allSize){ cb('', 0); return; }
 		var length = this.txtSizePage * 2;
 		if(readOffset < 0){ length += readOffset; readOffset = 0; }
+		if((readOffset + length) >= this.allSize){ length = this.allSize - readOffset; }
 		
-		let actualLength = length;
-		if((readOffset + actualLength) >= this.allSize){ 
-			actualLength = this.allSize - readOffset; 
-		}
-
-		const isPotentiallyPartial = (readOffset + actualLength) < this.allSize;
-
-		let readLength = actualLength;
-		if (isPotentiallyPartial) {
-			readLength += 300;
-			if (readOffset + readLength > this.allSize) {
-				readLength = this.allSize - readOffset;
-			}
-		}
-		
-    const that = this;
 		file.readArrayBuffer({
-		  uri: this.cPath, position: readOffset, length: readLength,
+		  uri: this.cPath, position: readOffset, length: length,
 		  success: function(data){
 			if (!data.buffer || data.buffer.length === 0) {
 				cb('', 0);
 				return;
 			}
 			try {
-				const charCodes = new Uint16Array(data.buffer.length / 2);
-				for (let i = 0, j = 0; i < data.buffer.length; i += 2, j++) {
-					charCodes[j] = (data.buffer[i+1] << 8) | data.buffer[i];
-				}
-
 				let str = '';
-				const CHUNK_SIZE = 8192;
-				for (let i = 0; i < charCodes.length; i += CHUNK_SIZE) {
-					str += String.fromCharCode.apply(null, charCodes.subarray(i, i + CHUNK_SIZE));
+				for(let i = 0; i < data.buffer.length; i += 2){
+				  str += String.fromCharCode(data.buffer[i+1]*256 + data.buffer[i]);
 				}
-				
-				if (!isPotentiallyPartial) {
-					cb(str, actualLength);
-					return;
-				}
-				
-				let cutLength = actualLength / 2;
-				if(cutLength > str.length) cutLength = str.length;
-
-				const chunk = str.substring(0, cutLength);
-				
-				if (that.preventParagraphSplitting) {
-					const lastNewlineIndex = chunk.lastIndexOf('\n');
-					if (lastNewlineIndex > 0) {
-						const finalStr = chunk.substring(0, lastNewlineIndex + 1);
-						const bytesToReport = finalStr.length * 2;
-						cb(finalStr, bytesToReport);
-						return;
-					}
-				}
-				
-				cb(chunk, chunk.length * 2);
+				cb(str, length);
 			} catch (e) {
-				prompt.showToast({ message: `解码章节内容失败: ${e}` });
 				cb('', 0);
 			}
 		  },
@@ -801,9 +767,9 @@
 		}
 	},
 	async _performSave() {
-		if (!this.name || this.totalChapters === 0) return;
+		if (!this.name || this.allChapters.length === 0) return;
 		try {
-			const chapter = await chapterManager.getChapterByArrayIndex(this.name, this.currentChapterIndexInAll);
+			const chapter = this.allChapters[this.currentChapterIndexInAll];
 			if (!chapter || chapter.index === undefined) return;
 	
 			let progress = await bookStorage.get(this.name);
@@ -875,6 +841,7 @@
 		
 		this.page1 = null;
 		this.page2 = null;
+		this.allChapters = null;
 		
 		brightness.setKeepScreenOn({ keepScreenOn: false }); 
 
@@ -933,10 +900,7 @@
 		}
 		
 		try {
-			await Promise.race([
-				this._performSave(),
-				new Promise(resolve => setTimeout(resolve, 200))
-			]);
+			await this._performSave();
 		} catch (e) {
 		}
 		
@@ -1036,7 +1000,7 @@
 		let progress = await bookStorage.get(this.name);
 		if (!progress.bookmarks) { progress.bookmarks = []; }
 		
-		const chapter = await chapterManager.getChapterByArrayIndex(this.name, this.currentChapterIndexInAll);
+		const chapter = this.allChapters[this.currentChapterIndexInAll];
         if (!chapter) {
             prompt.showToast({ message: '无法添加书签，章节信息错误' });
 			this.isProcessingClick = false;

@@ -48,7 +48,6 @@ export default {
     timer: null,
     bookTitle: "",
     loading: false,
-    isNavigating: false,
     timeFormat: '24h'
   },
   protected: {
@@ -88,7 +87,6 @@ export default {
     this.initChapterList();
   },
   onShow() {
-    this.isNavigating = false;
   },
   onDestroy() {
     if (this.timer) {
@@ -129,12 +127,32 @@ export default {
       const chapterIndex = progress.chapterIndex !== null ? progress.chapterIndex : -1;
       progress = null;
       
-      const result = await chapterManager.findChapterPage(this.name, chapterIndex, PAGE_SIZE);
+      const allChapters = await chapterManager.loadChapterList(this.name);
+      this.totalChapters = allChapters.length;
       
-      this.visibleChapters = result.chapters;
-      this.currentPage = result.currentPage;
-      this.totalPages = result.totalPages;
-      this.totalChapters = result.totalChapters;
+      this.totalPages = Math.ceil(allChapters.length / PAGE_SIZE) || 1;
+      if (chapterIndex >= 0) {
+        const currentIndex = allChapters.findIndex(ch => ch.index === chapterIndex);
+        if (currentIndex >= 0) {
+          this.currentPage = Math.floor(currentIndex / PAGE_SIZE);
+        } else {
+          this.currentPage = 0;
+        }
+      } else {
+        this.currentPage = 0;
+      }
+      
+      if (this.currentPage >= this.totalPages) {
+        this.currentPage = this.totalPages - 1;
+      }
+      if (this.currentPage < 0) {
+        this.currentPage = 0;
+      }
+      
+      const start = this.currentPage * PAGE_SIZE;
+      const end = start + PAGE_SIZE;
+      this.visibleChapters = allChapters.slice(start, end);
+      
       if (chapterIndex !== -1) {
         this.currentChapterIndex = chapterIndex;
       }
@@ -175,9 +193,6 @@ export default {
     }
   },
   selectChapter(chapter) {
-    if (this.isNavigating) return;
-    this.isNavigating = true;
-
     globalThis.justJumpedFromChapter = true;
     globalThis.newChapterIndex = chapter.index;
     globalThis.newChapterName = chapter.name;
@@ -228,6 +243,9 @@ export default {
     text-overflow: ellipsis;
     lines: 3;
     margin-bottom: 6px;
+}
+.itemtext-current {
+  color: #0D6EFF;
 }
 .itemtext2 {
     font-size: 24px;

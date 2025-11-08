@@ -74,10 +74,7 @@
   import router from '@system.router'
   import prompt from '@system.prompt'
   import app from '@system.app'
-  import file from '@system.file'
-  import storage from '../../common/storage.js'
   import bookStorage from '../../common/bookStorage.js'
-  import chapterManager from '../../common/chapterManager.js'
   
   
   export default {
@@ -180,21 +177,6 @@
 	  width: 432px;
 	  height: 514px;
 	  background-color: #000000;
-  }
-  
-  .more-info {
-	width: 431px;
-	background-color: rgb(0,0,0);
-  }
-  
-  .caltext {
-	  width: 320px;
-	  lines: 4;
-	  text-overflow: clip;
-	  font-size: 30px;
-	  color: rgb(255,255,255);
-	  text-align: left;
-	  height: 160px;
   }
   
   .list {

@@ -144,9 +144,4 @@
 	  height: 514px;
 	  background-color: #000000;
   }
-  .content-container {
-        position: absolute;
-        width: 336px;
-        top: 102px;
-    }
   </style>

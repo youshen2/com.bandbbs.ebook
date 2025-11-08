@@ -21,7 +21,6 @@
 <script>
 import router from '@system.router'
 import storage from '../../common/storage.js'
-import prompt from '@system.prompt'
 
 export default {
   private: {

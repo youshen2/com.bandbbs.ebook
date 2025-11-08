@@ -57,7 +57,6 @@ import router from '@system.router';
 import file from '@system.file';
 import storage from '../../common/storage.js';
 import app from '@system.app';
-import prompt from '@system.prompt';
 
 const INIT_PATH = "internal://files/books";
 

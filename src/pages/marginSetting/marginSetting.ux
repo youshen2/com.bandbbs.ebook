@@ -144,14 +144,6 @@ export default {
 	opacity: 0.3;
 }
 
-.margin-indicator.top {
-	border-bottom: 2px dashed #0D6EFF;
-}
-
-.margin-indicator.bottom {
-	border-top: 2px dashed #0D6EFF;
-}
-
 .content-area {
 	flex: 1;
 	width: 100%;

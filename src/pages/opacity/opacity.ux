@@ -109,33 +109,6 @@ export default {
 	background-color: #000000;
 }
 
-.more-info {
-	width: 431px;
-	background-color: rgb(0, 0, 0);
-}
-
-.prewText {
-	width: 288px;
-	height: 260px;
-	text-overflow: ellipsis;
-	color: rgb(255, 255, 255);
-	text-align: center;
-}
-
-.prew {
-	width: 324px;
-	height: 296px;
-	position: absolute;
-	top: 72px;
-	left: 6px;
-	border-width: 4px;
-	border-color: #262626;
-	background-color: black;
-	border-radius: 30px;
-	padding: 18px;
-
-}
-
 .item {
 	position: absolute;
 	left: 27px;
@@ -148,59 +121,5 @@ export default {
 	align-items: center;
 	justify-content: center;
 	padding: 20px;
-}
-
-.itemtext {
-	font-size: 36px;
-	font-weight: bold;
-	height: 68px;
-	width: 102px;
-	color: white;
-	text-align: center;
-	text-overflow: ellipsis;
-	lines: 1;
-	padding: 10px;
-	margin-right: 9px;
-	background-color: #262626;
-	border-radius: 12px;
-}
-
-.itemtext2 {
-	font-size: 30px;
-	line-height: 40px;
-	width: 320px;
-	color: #bbbbbb;
-	margin-left: 6px;
-	text-overflow: ellipsis;
-	lines: 1;
-	padding-left: 15px;
-	padding-right: 15px;
-	padding-top: 15px;
-}
-
-.calbtn1 {
-	color: rgb(191, 98, 59);
-	font-size: 30px;
-	background-color: rgb(20, 20, 20);
-	border-radius: 15px;
-	margin: 4px;
-}
-
-.calbtn2 {
-	color: rgb(255, 255, 255);
-	font-size: 30px;
-	background-color: rgb(20, 20, 20);
-	border-radius: 15px;
-	margin: 4px;
-}
-
-.infos {
-	width: 296px;
-	text-align: center;
-	font-size: 26px;
-	line-height: 35px;
-	color: white;
-	padding: 4px;
-	text-overflow: ellipsis;
 }
 </style>

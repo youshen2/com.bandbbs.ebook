@@ -29,7 +29,7 @@
 			</div>
 		</div>
 	  </scroll>
-		<img show="{{showSetting || alwaysShowTime}}" src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 122px;" />
+	  <img show="{{showSetting}}" src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 122px;" />
 		<img show="{{showSetting}}" src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
 		<img show="{{showSetting}}" src="/common/images/more.png" @click="gotoSetting" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
 		<div show="{{showSetting || alwaysShowTime}}" style="position: absolute; left: 130px; top: 8px; width: 172px; flex-direction: column; align-items: center;">
@@ -69,7 +69,6 @@
     import storage from '../../common/storage.js'
 	import bookStorage from '../../common/bookStorage.js'
 	import chapterManager from '../../common/chapterManager.js'
-	import progressCalculator from '../../common/progressCalculator.js'
 	import brightness from '@system.brightness'
 	import app from '@system.app'
 	import battery from '@system.battery'
@@ -797,7 +796,6 @@
 	},
 	async _performSave() {
 		if (!this.name || this.totalChapters === 0) return;
-		
 		try {
 			const chapter = await chapterManager.getChapterByArrayIndex(this.name, this.currentChapterIndexInAll);
 			if (!chapter || chapter.index === undefined) return;
@@ -811,55 +809,6 @@
 			
 			await bookStorage.set(this.name, progress);
 			progress = null;
-		} catch (e) {
-		}
-	},
-	async updateBookshelf() {
-		if (!this.name || this.totalChapters === 0) return;
-	
-		try {
-			const chapter = await chapterManager.getChapterByArrayIndex(this.name, this.currentChapterIndexInAll);
-			if (!chapter || chapter.index === undefined) return;
-	
-			const chapterIndex = chapter.index;
-			const offsetInChapter = this.currentFileOffset;
-			
-			let progressPercent = 0;
-			let progressMeta = await progressCalculator.getProgressMeta(this.name);
-	
-			if (progressMeta && progressMeta.totalSize > 0) {
-				const chapterMeta = progressMeta.chapters.find(c => c.index === chapterIndex);
-				if (chapterMeta) {
-					const readSize = chapterMeta.offset + offsetInChapter;
-					progressPercent = parseFloat(((readSize / progressMeta.totalSize) * 100).toFixed(2));
-				}
-			}
-			
-			if (progressPercent === 0) { 
-				progressPercent = this.totalChapters > 0 ? parseFloat(((this.currentChapterIndexInAll + 1) / this.totalChapters * 100).toFixed(2)) : 0;
-				if (!progressMeta) {
-					progressCalculator.calculateAndSaveProgressMeta(this.name).catch(()=>{});
-				}
-			}
-			progressMeta = null;
-	
-			let progress = await bookStorage.get(this.name);
-			progress.p = progressPercent;
-			await bookStorage.set(this.name, progress);
-			progress = null;
-	
-			const bookshelfUri = 'internal://files/books/bookshelf.json';
-			let data = await new Promise((resolve, reject) => file.readText({uri: bookshelfUri, success: resolve, fail: reject, timeout: 500})).catch(()=>null);
-			if (!data) return;
-	
-			let bookshelf = JSON.parse(data.text);
-			data = null;
-			const bookIndex = bookshelf.findIndex(b => b.dirName === this.name);
-			if (bookIndex > -1) {
-				bookshelf[bookIndex].progress = progressPercent;
-				await new Promise((resolve, reject) => file.writeText({uri: bookshelfUri, text: JSON.stringify(bookshelf), success: resolve, fail: reject, timeout: 500})).catch(()=>{});
-				bookshelf = null;
-			}
 		} catch (e) {
 		}
 	},
@@ -879,7 +828,6 @@
 		
 		try {
 			await this._performSave()
-			await this.updateBookshelf();
 		} catch (e) {}
 		
 		brightness.setKeepScreenOn({ keepScreenOn: false }); 
@@ -916,7 +864,6 @@
 		
 		try {
 			await this._performSave();
-			await this.updateBookshelf();
 		} catch (e) {
 		}
 		
@@ -954,7 +901,6 @@
 		
 		try {
 			await this._performSave();
-			await this.updateBookshelf();
 		} catch (e) {}
 		
 		router.back();
@@ -982,7 +928,7 @@
 		
 		try {
 			await Promise.race([
-				this._performSave().then(() => this.updateBookshelf()),
+				this._performSave(),
 				new Promise(resolve => setTimeout(resolve, 200))
 			]);
 		} catch (e) {

@@ -9,7 +9,7 @@
       <list class="list" if="{{shelfStyle === 'list'}}">
 		  <list-item for="{{visibleBooks}}" class="item" @click="selectFile($item)" type="nook">
 			  <marquee scrollamount="22" class="itemtext" text-offset="25">{{$item.name}}</marquee>
-			  <text class="itemtext2">{{$item.chapterCount}}章 · 进度 {{$item.progress || 0}}%</text>
+			  <marquee scrollamount="40" class="itemtext2">{{roundToDecimal((($item.lastReadChapterIndex + 1) / $item.chapterCount) * 100, 2) || 0}}% · 看到 {{$item.lastReadChapterIndex + 1}} / {{$item.chapterCount}} 章</marquee>
 		  </list-item>
           <list-item type="pagination" class="pagination-container" if="{{totalPages > 1}}">
             <div class="pagination-controls">
@@ -25,7 +25,7 @@
             <img if="{{$item.hasRealCover}}" class="cover-image" src="internal://files/books/{{$item.dirName}}/cover.jpg" />
             <div class="cover-content">
               <marquee scrollamount="30" class="itemtext" text-offset="25">{{$item.name}}</marquee>
-              <marquee scrollamount="40" class="itemtext2" text-offset="25">{{$item.chapterCount}}章 · 进度 {{$item.progress || 0}}%</marquee>
+              <marquee scrollamount="40" class="itemtext2" text-offset="25">{{roundToDecimal((($item.lastReadChapterIndex + 1) / $item.chapterCount) * 100, 2) || 0}}% · 看到 {{$item.lastReadChapterIndex + 1}} / {{$item.chapterCount}} 章</marquee>
             </div>
           </list-item>
           <list-item type="pagination" class="pagination-container" if="{{totalPages > 1}}">
@@ -55,6 +55,7 @@
 <script>
 import router from '@system.router';
 import file from '@system.file';
+import bookStorage from '../../common/bookStorage.js'
 import storage from '../../common/storage.js';
 import app from '@system.app';
 
@@ -159,11 +160,10 @@ export default {
                         that.loadPage(0);
                         books = null;
                     });
-                } else {
-                    that.allBooks = books;
-                    that.loadPage(0);
-                    books = null;
                 }
+                that.allBooks = books;
+                that.loadPage(0);
+                books = null;
             } catch (e) {
                 that.allBooks = [];
                 that.visibleBooks = [];
@@ -174,6 +174,29 @@ export default {
             that.visibleBooks = [];
         }
     });
+  },
+
+  roundToDecimal(num, decimalPlaces) {
+    return num.toFixed(decimalPlaces)
+  },
+
+  async updateBooksWithProgress() {
+      const booksToUpdate = [...this.allBooks];
+      for (let i = 0; i < booksToUpdate.length; i++) {
+          const book = booksToUpdate[i];
+          try {
+              const progress = await bookStorage.get(book.dirName);
+              if (progress && progress.chapterIndex !== undefined && progress.chapterIndex !== null) {
+                  book.lastReadChapterIndex = progress.chapterIndex;
+              } else {
+                book.lastReadChapterIndex = 0
+              }
+          } catch (e) {
+            book.lastReadChapterIndex = 0
+          }
+      }
+      this.allBooks = booksToUpdate;
+      this.loadPage(this.currentPage);
   },
 
   loadPage(page) {

@@ -91,7 +91,7 @@ export default {
         prompt.showToast({ message: `已切换为 ${this.saveMode === 'exit' ? '退出时保存' : '定时保存'}` });
     },
 	changeInterval(e){
-		this.saveInterval = e.value;
+		this.saveInterval = e.detail.value;
 		storage.set({
 			key: INTERVAL_STORAGE_KEY,
 			value: this.saveInterval

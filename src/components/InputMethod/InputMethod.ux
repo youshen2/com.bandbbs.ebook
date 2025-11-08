@@ -336,7 +336,7 @@ export default {
     percent66: 0,
     // 针对screenShape为rect的设备，会自动获取screenWidth并绑定到根div
     // 这样便能同时适配n67和o65甚至是后续设备，但实际效果可能受designWidth影响
-    screenWidth: 336,
+    screenWidth: 432,
     keys: {
       full: [
         ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],

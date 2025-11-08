@@ -138,6 +138,9 @@
         timeFormat: '24h',
 		contentHeight: 0,
 		preventParagraphSplitting: false,
+        saveMode: 'exit',
+        saveIntervalValue: 10,
+        saveIntervalId: null
 	  },
 	  protected: {
 		name: '',
@@ -187,6 +190,11 @@
 	},
 	async onShow(){
 		await this.loadSettings();
+      if (this.saveMode === 'periodic' && !this.saveIntervalId) {
+          this.saveIntervalId = setInterval(() => {
+              this._performSave();
+          }, this.saveIntervalValue * 1000);
+      }
 		this.updateBatteryStatus();
 		if (typeof globalThis.isKeepScreenOn !== 'undefined') {
 			if (this.isKeepScreenOn !== globalThis.isKeepScreenOn) {
@@ -238,7 +246,9 @@
 			{ key: 'EBOOK_CHAPTER_SWITCH_STYLE', prop: 'chapterSwitchStyle', type: 'string', default: 'button' },
 			{ key: 'EBOOK_AUTO_READ_DISTANCE', prop: 'autoReadDistance', type: 'int', default: 100 },
 			{ key: 'EBOOK_PREVENT_PARAGRAPH_SPLITTING', prop: 'preventParagraphSplitting', type: 'bool', default: false },
-			{ key: 'EBOOK_TIME_FORMAT', prop: 'timeFormat', type: 'string', default: '24h' }
+			{ key: 'EBOOK_TIME_FORMAT', prop: 'timeFormat', type: 'string', default: '24h' },
+            { key: 'EBOOK_PROGRESS_SAVE_MODE', prop: 'saveMode', type: 'string', default: 'exit' },
+            { key: 'EBOOK_PROGRESS_SAVE_INTERVAL', prop: 'saveIntervalValue', type: 'int', default: 10 }
 		];
 	
 		const promises = settingsConfig.map(s => getSetting(s.key, s.default));
@@ -304,7 +314,17 @@
 		} else {
 			chapterToLoadIndex = 0;
 		}
-    progress = null;
+
+     if (progress.txtSizePage) {
+         this.txtSizePage = progress.txtSizePage;
+     }
+     if (progress.fontSize) {
+        this.fontSize = progress.fontSize;
+        this.lineHeight = parseInt((-0.01)*(this.fontSize**2) + 1.62*this.fontSize - 3.23);
+        this.updateScrollHeight();
+     }
+
+     progress = null;
 
 		let chapterInfo = await chapterManager.getChapterInfo(this.name, chapterToLoadIndex);
 
@@ -770,9 +790,7 @@
 		if (forceImmediate) {
 			this._performSave();
 		} else {
-			this.saveDataTimeout = setTimeout(() => {
-				this._performSave();
-			}, 2000);
+             // No-op, saving is handled by timer or on exit
 		}
 	},
 	async _performSave() {
@@ -786,6 +804,8 @@
 			progress.chapterIndex = chapter.index;
 			progress.offsetInChapter = this.currentFileOffset;
 			progress.scrollOffset = this.currentScrollTop;
+			progress.txtSizePage = this.txtSizePage;
+			progress.fontSize = this.fontSize;
 			
 			await bookStorage.set(this.name, progress);
 			progress = null;
@@ -841,7 +861,11 @@
 		} catch (e) {
 		}
 	},
-	onHide(){ 
+	async onHide(){
+      if (this.saveIntervalId) {
+          clearInterval(this.saveIntervalId);
+          this.saveIntervalId = null;
+      }
 		if (this.saveDataTimeout) {
 			clearTimeout(this.saveDataTimeout);
 			this.saveDataTimeout = null;
@@ -851,13 +875,18 @@
 			this.autoInterval = null; 
 		}
 		
-		this._performSave().then(() => {
-			this.updateBookshelf();
-		});
+		try {
+			await this._performSave()
+			await this.updateBookshelf();
+		} catch (e) {}
 		
 		brightness.setKeepScreenOn({ keepScreenOn: false }); 
 	},
 	async onDestroy(){ 
+      if (this.saveIntervalId) {
+          clearInterval(this.saveIntervalId);
+          this.saveIntervalId = null;
+      }
 		if (this.saveDataTimeout) {
 			clearTimeout(this.saveDataTimeout);
 			this.saveDataTimeout = null;
@@ -899,7 +928,7 @@
 		}
 	},
 	onBackPress(){ this.back(); return true; },
-	back(){
+	async back(){
 		if (this.saveDataTimeout) {
 			clearTimeout(this.saveDataTimeout);
 			this.saveDataTimeout = null;
@@ -921,13 +950,12 @@
 			this.autoInterval = null; 
 		}
 		
-		this._performSave().then(() => {
-			this.updateBookshelf();
-		});
+		try {
+			await this._performSave();
+			await this.updateBookshelf();
+		} catch (e) {}
 		
-		setTimeout(() => {
-			router.back();
-		}, 100);
+		router.back();
 	},
 	gotoSetting(){
 		if (this.isProcessingClick) return;

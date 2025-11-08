@@ -177,6 +177,9 @@
       },
       "pages/performanceSetting": {
         "component": "performanceSetting"
+      },
+      "pages/progressSavingSetting": {
+        "component": "progressSavingSetting"
       }
     }
   },

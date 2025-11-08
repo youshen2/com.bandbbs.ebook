@@ -1,0 +1,152 @@
+<import name="number" src="../../components/number_choose/number_choose"></import>
+<template>
+	<div class="page" style="flex-direction: column">
+		<div class="item">
+			<text static style="font-size: 24px; color: white; text-align: left; padding: 20px; lines: 5;">
+				选择阅读器保存阅读进度的方式。
+			</text>
+		</div>
+
+        <div class="setting-group">
+            <div class="setting-item" @click="changeMode('exit')">
+                <text class="setting-label">退出时保存</text>
+                <img class="radio-icon" if="{{saveMode === 'exit'}}" src="/common/images/check.png" />
+            </div>
+            <div class="setting-item" @click="changeMode('periodic')">
+                <text class="setting-label">定时保存</text>
+                <img class="radio-icon" if="{{saveMode === 'periodic'}}" src="/common/images/check.png" />
+            </div>
+        </div>
+
+		<number if="{{saveMode === 'periodic'}}" style="position: absolute;top:415px;" max.static="60" min.static="1" step.static="1" unit.static="秒" value="{{saveInterval}}" @change="changeInterval" name.static="保存间隔">
+		</number>
+
+		<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+		<img static src="/common/images/reset.png" @click="reset" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
+		<text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+		  {{nowTime}}
+		</text>
+		<text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+			进度保存
+		</text>
+	</div>
+</template>
+
+<script>
+import router from "@system.router";
+import storage from '../../common/storage.js';
+import prompt from '@system.prompt';
+
+const MODE_STORAGE_KEY = "EBOOK_PROGRESS_SAVE_MODE";
+const INTERVAL_STORAGE_KEY = "EBOOK_PROGRESS_SAVE_INTERVAL";
+const DEFAULT_MODE = "exit";
+const DEFAULT_INTERVAL = 10;
+
+export default {
+	private: {
+        saveMode: DEFAULT_MODE,
+        saveInterval: DEFAULT_INTERVAL,
+		nowTime: "00:00",
+		timer: null
+	},
+	updateTime() {
+		const date = new new Date();
+		let hours = date.getHours();
+		let minutes = date.getMinutes();
+
+		hours = hours < 10 ? '0' + hours : hours;
+		minutes = minutes < 10 ? '0' + minutes : minutes;
+
+		this.nowTime = `${hours}:${minutes}`;
+	},
+	onInit() {
+		this.updateTime();
+		this.timer = setInterval(() => {
+			this.updateTime();
+		}, 1000);
+
+		storage.get({
+			key: MODE_STORAGE_KEY,
+			success: (data) => {
+				if (data) {
+					this.saveMode = data;
+				}
+			}
+		});
+        storage.get({
+			key: INTERVAL_STORAGE_KEY,
+			success: (data) => {
+				if (data) {
+					this.saveInterval = parseInt(data);
+				}
+			}
+		});
+	},
+    changeMode(mode) {
+        this.saveMode = mode;
+        storage.set({
+            key: MODE_STORAGE_KEY,
+            value: this.saveMode
+        });
+        prompt.showToast({ message: `已切换为 ${this.saveMode === 'exit' ? '退出时保存' : '定时保存'}` });
+    },
+	changeInterval(e){
+		this.saveInterval = e.value;
+		storage.set({
+			key: INTERVAL_STORAGE_KEY,
+			value: this.saveInterval
+		});
+	},
+	reset() {
+		this.saveMode = DEFAULT_MODE;
+        this.saveInterval = DEFAULT_INTERVAL;
+		storage.set({ key: MODE_STORAGE_KEY, value: this.saveMode });
+        storage.set({ key: INTERVAL_STORAGE_KEY, value: this.saveInterval });
+		prompt.showToast({ message: '已重置为默认设置' });
+	},
+	back() {
+		router.back();
+	},
+	onDestroy() {
+		if (this.timer) {
+			clearInterval(this.timer);
+			this.timer = null;
+		}
+	}
+}
+</script>
+
+<style>
+.page {
+	width: 432px;
+	height: 514px;
+	background-color: #000000;
+}
+.item {
+    width: 100%;
+    margin-top: 102px;
+}
+.setting-group {
+    padding: 14px 20px;
+    background-color: #262626;
+	border-radius: 36px;
+    width: 100%;
+    flex-direction: column;
+    padding: 0 20px;
+}
+.setting-item {
+    width: 100%;
+    height: 80px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+.setting-label {
+    font-size: 28px;
+    color: white;
+}
+.radio-icon {
+    width: 40px;
+    height: 40px;
+}
+</style>

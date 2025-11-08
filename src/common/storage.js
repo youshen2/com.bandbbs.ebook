@@ -24,11 +24,11 @@ storageFile.get = function(param){
     file.readText({
       uri: fileSavedPath,
       success: function(data) {
-        // 
+          
         func(JSON.parse(data.text))
       },
       fail: function(data, code) {
-        // 
+          
         func({})
       }
     })
@@ -39,8 +39,8 @@ storageFile.save = function(data,param){
       uri: fileSavedPath,
       text: JSON.stringify(data),
       success: function() {
-        // 
-        // 
+          
+          
         if(param.success){
             param.success();
         }
@@ -69,11 +69,11 @@ storageFile.set = function(param){
     file.readText({
       uri: fileSavedPath,
       success: function(data) {
-        // 
+          
         func(JSON.parse(data.text))
       },
       fail: function(data, code) {
-        // 
+          
         func({})
       }
     })
@@ -92,11 +92,11 @@ storageFile.delete = function(param){
     file.readText({
       uri: fileSavedPath,
       success: function(data) {
-        // 
+          
         func(JSON.parse(data.text))
       },
       fail: function(data, code) {
-        // 
+          
         func({})
       }
     })

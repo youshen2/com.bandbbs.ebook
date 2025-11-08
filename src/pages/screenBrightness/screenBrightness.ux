@@ -10,22 +10,14 @@
 			</text>
 		</div>
 
-<<<<<<< HEAD
-		<number show="{{!followSystem}}" style="position: absolute; top: 415px" max="255" min="10" step="1" unit="" value="{{brightnessValue}}" @change="change" name="自定义亮度">
-=======
-		<number show="{{!followSystem}}" style="position: absolute; bottom: 6px" max.static="255" min.static="10" step.static="1" unit.static="" value="{{brightnessValue}}" @change="change" name.static="自定义亮度">
->>>>>>> 0ec26dd (static)
+		<number show="{{!followSystem}}" style="position: absolute; top: 415px" max.static="255" min.static="10" step.static="1" unit.static="" value="{{brightnessValue}}" @change="change" name.static="自定义亮度">
 		</number>
 
-		<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
-		<text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
-		  {{nowTime}}
-		</text>
-<<<<<<< HEAD
-		<text style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
-=======
-		<text static style="position: absolute;left: 78px;top: 35px;width: 180px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
->>>>>>> 0ec26dd (static)
+        <img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+        <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+          {{nowTime}}
+        </text>
+        <text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 			屏幕亮度
 		</text>
 	</div>

@@ -138,13 +138,33 @@ export default {
             try {
                 let books = JSON.parse(data.text);
                 if (that.shelfStyle === 'cover') {
-                    books.forEach(book => {
-                        book.hasRealCover = false;
+                    const coverCheckPromises = books.map(book => {
+                        return new Promise(resolve => {
+                            const coverPath = `internal://files/books/${book.dirName}/cover.jpg`;
+                            file.access({
+                                uri: coverPath,
+                                success: () => {
+                                    book.hasRealCover = true;
+                                    resolve();
+                                },
+                                fail: () => {
+                                    book.hasRealCover = false;
+                                    resolve();
+                                }
+                            });
+                        });
                     });
+
+                    Promise.all(coverCheckPromises).then(() => {
+                        that.allBooks = books;
+                        that.loadPage(0);
+                        books = null;
+                    });
+                } else {
+                    that.allBooks = books;
+                    that.loadPage(0);
+                    books = null;
                 }
-                that.allBooks = books;
-                that.loadPage(0);
-                books = null;
             } catch (e) {
                 that.allBooks = [];
                 that.visibleBooks = [];
@@ -166,23 +186,7 @@ export default {
       const end = start + this.pageSize;
       this.visibleBooks = this.allBooks.slice(start, end);
       this.currentPage = page;
-      if (this.shelfStyle === 'cover') {
-        this.checkCovers();
-      }
     }
-  },
-
-  checkCovers() {
-    this.visibleBooks.forEach((book, index) => {
-      const coverPath = `internal://files/books/${book.dirName}/cover.jpg`;
-      file.access({
-        uri: coverPath,
-        success: () => {
-          const newBook = Object.assign({}, book, { hasRealCover: true });
-          this.visibleBooks.splice(index, 1, newBook);
-        }
-      });
-    });
   },
 
   prevPage() {

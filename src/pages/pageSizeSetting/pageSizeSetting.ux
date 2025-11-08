@@ -8,7 +8,7 @@
 				修改后需重进阅读页生效。
 			</text>
 		</div>
-		<number style="position: absolute; top: 415px" max.static="2000" min.static="600" step.static="100" unit.static="字节" value="{{pageSize}}" @change="change" name.static="分段大小">
+		<number style="position: absolute; top: 415px" max.static="1200" min.static="400" step.static="100" unit.static="字节" value="{{pageSize}}" @change="change" name.static="分段大小">
 		</number>
 
 		<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>

@@ -1,6 +1,6 @@
 <template>
 	<div class="page">
-		<list class="list" style="padding: 86px 6px 6px 6px;">
+		<list class="list" style="padding: 92px 6px 6px 6px;">
 			<list-item if="{{hasCover}}" type="cover" style="height: 255px; align-items: center; justify-content: center; margin-bottom: 12px;">
 				<img src="{{coverPath}}" style="width: 160px;height: 213px;object-fit: cover;border-radius: 12px;" />
 			</list-item>

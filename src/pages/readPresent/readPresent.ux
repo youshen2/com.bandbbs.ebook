@@ -5,7 +5,7 @@
 			  {{inputPage}}
 		  </text>
 		  <text style="font-size: 24px;font-weight:bold;color: rgba(255, 255, 255, 0.6);width: 100%;text-align: center;">
-			  共 {{totalChapters}} 章
+			  共 {{syncedChapters}} / {{totalChapters}} 章
 		  </text>
 	  </div>
 	  <div class="row" style="top:228px">
@@ -45,14 +45,15 @@
   import prompt from '@system.prompt'
   import file from '@system.file'
   import bookStorage from '../../common/bookStorage.js'
+  import chapterManager from '../../common/chapterManager.js'
   
   export default {
 	private: {
 	  inputPage: '0',
 	  nowTime: "00:00",
 	  timer: null,
-	  allChapters: [],
-	  totalChapters: 1
+	  totalChapters: 1,
+	  syncedChapters: 1
 	},
 	protected: {
 		name: ''
@@ -75,45 +76,20 @@
 	  this.loadData();
 	},
 	async loadData() {
-        const listUri = `internal://files/books/${this.name}/list.txt`;
-        try {
-            let listData = await new Promise((resolve, reject) => file.readText({ uri: listUri, success: resolve, fail: reject }));
-            const lines = listData.text.split('\n').filter(Boolean);
-            listData = null;
-            
-            const chapterMap = new Map();
-            for (const line of lines) {
-                try {
-                    const chapter = JSON.parse(line);
-                    if (chapter.index !== null && chapter.index !== undefined) {
-                        chapterMap.set(chapter.index, chapter);
-                    }
-                } catch (e) {
-                }
-            }
-            
-            this.allChapters = Array.from(chapterMap.values()).sort((a, b) => a.index - b.index);
-            this.totalChapters = this.allChapters.length;
-        } catch (e) {
-            this.allChapters = [];
-            this.totalChapters = 0;
-        }
-
+		this.totalChapters = await chapterManager.getTotalChapters(this.name);
+		this.syncedChapters = await chapterManager.getSyncedChapters(this.name);
 		let progress = await bookStorage.get(this.name);
 		if (progress.chapterIndex !== null) {
-			const chapterArrayIndex = this.allChapters.findIndex(c => c.index === progress.chapterIndex);
-			this.inputPage = (chapterArrayIndex + 1).toString();
+			this.inputPage = (progress.chapterIndex + 1).toString();
 		} else {
 			this.inputPage = '1';
 		}
-    progress = null;
 	},
 	onDestroy(){
 		if (this.timer) {
 			clearInterval(this.timer);
 			this.timer = null;
 		}
-		this.allChapters = [];
 	},
 	async onClick(num){
 	  if (num === 'del') {
@@ -130,12 +106,12 @@
 		  if (isNaN(targetChapterNum) || targetChapterNum < 1) {
 			  targetChapterNum = 1;
 		  }
-		  if (targetChapterNum > this.totalChapters) {
-			  targetChapterNum = this.totalChapters;
+		  if (this.syncedChapters > 0 && targetChapterNum > this.syncedChapters) {
+			  targetChapterNum = this.syncedChapters;
 		  }
 		  if (this.totalChapters === 0) return;
 
-		  const targetChapterIndex = this.allChapters[targetChapterNum - 1].index;
+		  const targetChapterIndex = targetChapterNum - 1;
 		  
 		  try {
 			  let progress = await bookStorage.get(this.name);
@@ -158,8 +134,8 @@
 	  const newValStr = currentVal + num;
 	  const newVal = parseInt(newValStr);
   
-	  if (newVal > this.totalChapters) {
-		  prompt.showToast({ message: `最大章节为 ${this.totalChapters}`, duration: 1000 });
+	  if (newVal > this.syncedChapters) {
+		  prompt.showToast({ message: `最大章节为 ${this.syncedChapters}`, duration: 1000 });
 	  } else {
 		  this.inputPage = newValStr;
 	  }

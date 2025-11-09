@@ -123,45 +123,34 @@ export default {
     this.loading = true;
 
     try {
-      let progress = await bookStorage.get(this.name);
-      const chapterIndex = progress.chapterIndex !== null ? progress.chapterIndex : -1;
-      progress = null;
+      const [progress, totalChapters] = await Promise.all([
+        bookStorage.get(this.name),
+        chapterManager.getTotalChapters(this.name)
+      ]);
       
-      const allChapters = await chapterManager.loadChapterList(this.name);
-      this.totalChapters = allChapters.length;
-      
-      this.totalPages = Math.ceil(allChapters.length / PAGE_SIZE) || 1;
-      if (chapterIndex >= 0) {
-        const currentIndex = allChapters.findIndex(ch => ch.index === chapterIndex);
-        if (currentIndex >= 0) {
-          this.currentPage = Math.floor(currentIndex / PAGE_SIZE);
-        } else {
-          this.currentPage = 0;
-        }
-      } else {
-        this.currentPage = 0;
+      const chapterIndex = (progress && progress.chapterIndex !== null) ? progress.chapterIndex : -1;
+
+      this.totalChapters = totalChapters || 0;
+      this.totalPages = Math.ceil(this.totalChapters / PAGE_SIZE) || 1;
+      this.currentChapterIndex = chapterIndex;
+
+      let targetPage = 0;
+      if (chapterIndex >= 0 && chapterIndex < this.totalChapters) {
+          targetPage = Math.floor(chapterIndex / PAGE_SIZE);
       }
       
-      if (this.currentPage >= this.totalPages) {
-        this.currentPage = this.totalPages - 1;
-      }
-      if (this.currentPage < 0) {
-        this.currentPage = 0;
-      }
+      const pageData = await chapterManager.getChapterPage(this.name, targetPage, PAGE_SIZE);
       
-      const start = this.currentPage * PAGE_SIZE;
-      const end = start + PAGE_SIZE;
-      this.visibleChapters = allChapters.slice(start, end);
-      
-      if (chapterIndex !== -1) {
-        this.currentChapterIndex = chapterIndex;
-      }
+      this.visibleChapters = pageData.chapters;
+      this.currentPage = pageData.currentPage;
 
     } catch (error) {
       prompt.showToast({ message: `章节列表加载失败` });
       this.visibleChapters = [];
+      this.totalChapters = 0;
       this.totalPages = 1;
       this.currentPage = 0;
+      this.currentChapterIndex = -1;
     } finally {
       this.loading = false;
     }

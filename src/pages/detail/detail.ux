@@ -142,8 +142,7 @@
         saveIntervalId: null,
         alwaysShowTime: false,
 		alwaysShowTimeSensitivity: 50,
-		isNearTopForHd: false,
-		allChapters: []
+		isNearTopForHd: false
 	  },
 	  protected: {
 		name: '',
@@ -176,7 +175,7 @@
 	  },
 	updatePageNumber(){
 		this.currentPage = this.currentChapterIndexInAll + 1;
-		this.totalPages = this.allChapters.length;
+		this.totalPages = this.totalChapters;
 	},
 	onInit(){
 		this.updateTime();
@@ -294,14 +293,23 @@
 	},
 	async loadBook() {
 		try {
-			this.allChapters = await chapterManager.loadChapterList(this.name);
+			const version = await chapterManager.checkVersion(this.name);
+			if (version === 'old') {
+				await chapterManager.handleOldVersion(this.name);
+				return;
+			}
+			if (version === 'none') {
+				this.page1 = { text: "本书没有内容", offset: 0, length: 0 };
+				return;
+			}
+			this.totalChapters = await chapterManager.getTotalChapters(this.name);
 		} catch (e) {
 			prompt.showToast({ message: '章节列表加载失败' });
-			this.allChapters = [];
+			this.totalChapters = 0;
 			return;
 		}
 
-		if (!this.allChapters || this.allChapters.length === 0) {
+		if (this.totalChapters === 0) {
 			this.page1 = { text: "本书没有内容", offset: 0, length: 0 };
 			return;
 		}
@@ -330,7 +338,7 @@
 			offsetInChapter = progress.offsetInChapter || 0;
 			scrollOffset = progress.scrollOffset || 0;
 		} else {
-			chapterToLoadIndex = this.allChapters[0].index;
+			chapterToLoadIndex = 0;
 		}
 
      if (progress.txtSizePage) {
@@ -344,12 +352,12 @@
 
      progress = null;
 
-		let chapterArrayIndex = this.allChapters.findIndex(c => c.index === chapterToLoadIndex);
-		if (chapterArrayIndex === -1) {
-			chapterToLoadIndex = this.allChapters[0].index;
+		let chapterArrayIndex = chapterToLoadIndex;
+
+		if (chapterArrayIndex < 0 || chapterArrayIndex >= this.totalChapters) {
+			chapterToLoadIndex = 0;
 			chapterArrayIndex = 0;
 		}
-		this.totalChapters = this.allChapters.length;
 		
 		this.currentFileOffset = offsetInChapter;
 		this.savedScrollOffset = scrollOffset;
@@ -367,13 +375,14 @@
 		});
 	},
 	async loadChapter(chapterIdxInAll, callback) {
-		if (!this.allChapters || chapterIdxInAll < 0 || chapterIdxInAll >= this.allChapters.length) {
+		if (chapterIdxInAll < 0 || chapterIdxInAll >= this.totalChapters) {
 			if(callback) callback();
 			return;
 		}
 
-		const chapter = this.allChapters[chapterIdxInAll];
+		const chapter = await chapterManager.getChapterByIndex(this.name, chapterIdxInAll);
 		if (!chapter) {
+			prompt.showToast({ message: '无法加载章节信息' });
 			if(callback) callback();
 			return;
 		}
@@ -767,9 +776,9 @@
 		}
 	},
 	async _performSave() {
-		if (!this.name || this.allChapters.length === 0) return;
+		if (!this.name || this.totalChapters === 0) return;
 		try {
-			const chapter = this.allChapters[this.currentChapterIndexInAll];
+			const chapter = await chapterManager.getChapterByIndex(this.name, this.currentChapterIndexInAll);
 			if (!chapter || chapter.index === undefined) return;
 	
 			let progress = await bookStorage.get(this.name);
@@ -1000,7 +1009,7 @@
 		let progress = await bookStorage.get(this.name);
 		if (!progress.bookmarks) { progress.bookmarks = []; }
 		
-		const chapter = this.allChapters[this.currentChapterIndexInAll];
+		const chapter = await chapterManager.getChapterByIndex(this.name, this.currentChapterIndexInAll);
         if (!chapter) {
             prompt.showToast({ message: '无法添加书签，章节信息错误' });
 			this.isProcessingClick = false;

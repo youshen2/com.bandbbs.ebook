@@ -1,8 +1,8 @@
 {
   "package": "com.bandbbs.ebook.plus",
   "name": "电子书",
-  "versionName": "4.4.0.RW",
-  "versionCode": 251111,
+  "versionName": "4.4.1.RW",
+  "versionCode": 251112,
   "minPlatformVersion": 1100,
   "icon": "/common/logo.png",
   "simulationVersion": "default",

@@ -107,6 +107,7 @@ export default {
         }
     },
     deleteBook() {
+        prompt.showToast({ message: '开始删除...', duration: 500 });
         if (!this.cPath) {
             prompt.showToast({ message: '参数错误' });
             router.back();
@@ -155,6 +156,7 @@ export default {
         });
     },
     clearBookshelf() {
+        prompt.showToast({ message: '开始删除...', duration: 500 });
         file.rmdir({
             uri: 'internal://files/books/',
             recursive: true,

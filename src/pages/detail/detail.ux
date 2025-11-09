@@ -193,11 +193,11 @@
 	},
 	async onShow(){
 		await this.loadSettings();
-      if (this.saveMode === 'periodic' && !this.saveIntervalId) {
-          this.saveIntervalId = setInterval(() => {
-              this._performSave();
-          }, this.saveIntervalValue * 1000);
-      }
+		if (this.saveMode === 'periodic' && !this.saveIntervalId) {
+			this.saveIntervalId = setInterval(() => {
+				this._performSave();
+			}, this.saveIntervalValue * 1000);
+		}
 		this.updateBatteryStatus();
 		if (typeof globalThis.isKeepScreenOn !== 'undefined') {
 			if (this.isKeepScreenOn !== globalThis.isKeepScreenOn) {

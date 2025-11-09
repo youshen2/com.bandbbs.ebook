@@ -4,8 +4,8 @@
 	  <list class="list">
 		  <list-item for="{{tutorialList}}" class="item" @click="routerTo($item)" type="item">
 			  <div class="item-content">
-				  <marquee text-offset="25" scrollamount="30" class="itemtext">{{$item.title}}</marquee>
-				  <marquee text-offset="25" scrollamount="40" class="itemtext2">{{$item.subtitle}}</marquee>
+				  <text class="itemtext">{{$item.title}}</text>
+				  <text class="itemtext2">{{$item.subtitle}}</text>
 			  </div>
 			  <img static src="/common/images/enter.png" style="width:40px;height: 40px;"/>
 		  </list-item>
@@ -27,13 +27,13 @@
   
   const tutorialList = [
     {
-      title: '如何同步书籍？',
-      subtitle: '通过手机客户端传入设备',
+      title: '如何同步书籍',
+      subtitle: '通过手机客户端',
       content: '请先在手机上安装“弦电子书同步器”应用。\n\n随后，打开小米运动健康，连接手环。\n\n保证小米运动健康连接到手环并且可以在后台运行后，打开“弦电子书同步器”。\n\n导入一本书籍（支持TXT、EPUB和NVB私有格式，不支持DOCX等格式。\n\n随后点击书籍卡片的同步按钮，与手环进行同步。'
     },
     {
-      title: '为什么会显示空间不足',
-      subtitle: '明明空间就是足的……',
+      title: '显示空间不足',
+      subtitle: '空间明明足够的',
       content: '小米Vela嵌入式系统会预留部分空间，为系统升级做准备，因此通过米环管理看见的剩余空间不等于能够使用的空间。'
     },
     {
@@ -134,7 +134,7 @@
 	  font-weight: bold;
 	  color: rgba(255,255,255,0.6);
 	  text-overflow: ellipsis;
-	  lines: 1;
+	  lines: 2;
   }
   
   

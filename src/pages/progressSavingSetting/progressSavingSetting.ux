@@ -35,86 +35,88 @@
 <script>
 import router from "@system.router";
 import storage from '../../common/storage.js';
-import prompt from '@system.prompt';
-
 const MODE_STORAGE_KEY = "EBOOK_PROGRESS_SAVE_MODE";
 const INTERVAL_STORAGE_KEY = "EBOOK_PROGRESS_SAVE_INTERVAL";
 const DEFAULT_MODE = "exit";
 const DEFAULT_INTERVAL = 10;
 
+
 export default {
-	private: {
+	  private: {
         saveMode: DEFAULT_MODE,
         saveInterval: DEFAULT_INTERVAL,
 		nowTime: "00:00",
 		timer: null
-	},
-	updateTime() {
-		const date = new new Date();
-		let hours = date.getHours();
-		let minutes = date.getMinutes();
-
-		hours = hours < 10 ? '0' + hours : hours;
-		minutes = minutes < 10 ? '0' + minutes : minutes;
-
-		this.nowTime = `${hours}:${minutes}`;
-	},
-	onInit() {
-		this.updateTime();
-		this.timer = setInterval(() => {
-			this.updateTime();
-		}, 1000);
-
-		storage.get({
-			key: MODE_STORAGE_KEY,
-			success: (data) => {
-				if (data) {
-					this.saveMode = data;
-				}
-			}
-		});
+	  },
+	  updateTime() {
+		  const date = new Date();
+		  let hours = date.getHours();
+		  let minutes = date.getMinutes();
+		  hours = hours < 10 ? '0' + hours : hours;
+		  minutes = minutes < 10 ? '0' + minutes : minutes;
+		  this.nowTime = `${hours}:${minutes}`;
+	  },
+	  onInit() {
+		  this.updateTime();
+		  this.timer = setInterval(() => {
+			  this.updateTime();
+		  }, 1000);
+  
         storage.get({
-			key: INTERVAL_STORAGE_KEY,
-			success: (data) => {
-				if (data) {
-					this.saveInterval = parseInt(data);
-				}
-			}
-		});
-	},
-    changeMode(mode) {
-        this.saveMode = mode;
-        storage.set({
             key: MODE_STORAGE_KEY,
-            value: this.saveMode
+            success: (data) => {
+                if (data) {
+                    this.saveMode = data;
+                }
+            },
         });
-        prompt.showToast({ message: `已切换为 ${this.saveMode === 'exit' ? '退出时保存' : '定时保存'}` });
-    },
-	changeInterval(e){
-		this.saveInterval = e.detail.value;
-		storage.set({
-			key: INTERVAL_STORAGE_KEY,
-			value: this.saveInterval
-		});
-	},
-	reset() {
-		this.saveMode = DEFAULT_MODE;
-        this.saveInterval = DEFAULT_INTERVAL;
-		storage.set({ key: MODE_STORAGE_KEY, value: this.saveMode });
-        storage.set({ key: INTERVAL_STORAGE_KEY, value: this.saveInterval });
-		prompt.showToast({ message: '已重置为默认设置' });
-	},
-	back() {
-		router.back();
-	},
-	onDestroy() {
+        
+        storage.get({
+            key: INTERVAL_STORAGE_KEY,
+            success: (data) => {
+                if (data) {
+                    this.saveInterval = parseInt(data);
+                }
+            },
+        });
+	  },
+	  onDestroy(){
 		if (this.timer) {
-			clearInterval(this.timer);
-			this.timer = null;
-		}
-	}
-}
-</script>
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+	  },
+	  change(e) {
+		  this.saveInterval = e.detail.value;
+		  storage.set({
+			  key: INTERVAL_STORAGE_KEY,
+			  value: this.saveInterval.toString(),
+		  });
+	  },
+	  changeMode(e) {
+		  this.saveMode = e;
+		  storage.set({
+			  key: MODE_STORAGE_KEY,
+			  value: this.saveMode,
+		  });
+	  },
+	  reset() {
+        this.saveInterval = DEFAULT_INTERVAL;
+		  storage.set({
+			  key: INTERVAL_STORAGE_KEY,
+			  value: this.saveInterval.toString(),
+		  });
+          this.saveMode = DEFAULT_MODE;
+		  storage.set({
+			  key: MODE_STORAGE_KEY,
+			  value: this.saveMode,
+		  });
+	  },
+	  back() {
+		  router.back();
+	  },
+  };
+  </script>
 
 <style>
 .page {

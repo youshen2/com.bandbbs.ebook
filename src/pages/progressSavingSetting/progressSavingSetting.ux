@@ -18,7 +18,7 @@
             </div>
         </div>
 
-		<number if="{{saveMode === 'periodic'}}" style="position: absolute;top:415px;" max.static="60" min.static="1" step.static="1" unit.static="秒" value="{{saveInterval}}" @change="changeInterval" name.static="保存间隔">
+		<number if="{{saveMode === 'periodic'}}" style="position: absolute;top:415px;" max.static="60" min.static="1" step.static="1" unit.static="秒" value="{{saveInterval}}" @change="change" name.static="保存间隔">
 		</number>
 
 		<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>

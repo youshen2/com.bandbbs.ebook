@@ -26,9 +26,11 @@ async function handleOldVersion(bookName) {
     router.push({
         uri: '/pages/confirm',
         params: {
+            action: 'deleteBook',
             title: "不兼容的旧格式",
             subText: "需要删除数据",
-            confirmText: `书籍 "${bookName}" 使用了旧的索引格式，必须删除后重新同步才能阅读。`,
+            confirmText: `此书籍使用了旧的索引格式，必须删除后重新同步才能阅读。`,
+            cPath: 'internal://files/books/' + bookName
         }
     });
 }

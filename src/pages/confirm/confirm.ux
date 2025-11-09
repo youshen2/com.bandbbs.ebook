@@ -116,6 +116,12 @@ export default {
         const that = this;
         const dirName = this.cPath.split('/').pop();
 
+        if (!dirName) {
+            prompt.showToast({ message: '书籍目录名无效' });
+            router.back();
+            return;
+        }
+
         file.rmdir({
             uri: this.cPath,
             recursive: true,
@@ -123,12 +129,19 @@ export default {
                 that.updateBookshelf(dirName);
             },
             fail: (data, code) => {
-                prompt.showToast({ message: `删除失败: ${code}`, duration: 1000 });
-                router.back();
+                // 即使删除目录失败，也尝试更新书架
+                // 这可以处理目录不存在但书架条目存在的情况
+                that.updateBookshelf(dirName);
             }
         });
     },
     updateBookshelf(dirName) {
+        if (!dirName) {
+            // 双重保险
+            prompt.showToast({ message: '删除成功', duration: 1000 });
+            router.replace({ uri: '/pages/index' });
+            return;
+        }
         file.readText({
             uri: BOOKSHELF_URI,
             success: function(data) {

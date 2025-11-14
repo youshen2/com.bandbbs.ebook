@@ -1,0 +1,522 @@
+<template>
+  <div class="page" style="flex-direction: column;" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
+    <img static src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 102px;" />
+    <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+      {{nowTime}}
+    </text>
+    <text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+      计算器
+    </text>
+
+    <div class="display">
+      <text class="display-text">{{display}}</text>
+    </div>
+
+    <div class="keys">
+      <div class="row" if="!isSci">
+        <div class="key soft" clickable="true" @click="pressClear"><text class="key-label">{{clearLabel}}</text></div>
+        <div class="key soft" clickable="true" @click="pressBackspace"><text class="key-label">←</text></div>
+        <div class="key soft" clickable="true" @click="pressPercent"><text class="key-label">%</text></div>
+        <div class="key op" clickable="true" @click="pressOp('÷')"><text class="key-label">÷</text></div>
+      </div>
+      <div class="row" if="!isSci">
+        <div class="key" clickable="true" @click="pressDigit('7')"><text class="key-label">7</text></div>
+        <div class="key" clickable="true" @click="pressDigit('8')"><text class="key-label">8</text></div>
+        <div class="key" clickable="true" @click="pressDigit('9')"><text class="key-label">9</text></div>
+        <div class="key op" clickable="true" @click="pressOp('×')"><text class="key-label">×</text></div>
+      </div>
+      <div class="row" if="!isSci">
+        <div class="key" clickable="true" @click="pressDigit('4')"><text class="key-label">4</text></div>
+        <div class="key" clickable="true" @click="pressDigit('5')"><text class="key-label">5</text></div>
+        <div class="key" clickable="true" @click="pressDigit('6')"><text class="key-label">6</text></div>
+        <div class="key op" clickable="true" @click="pressOp('−')"><text class="key-label">−</text></div>
+      </div>
+      <div class="row" if="!isSci">
+        <div class="key" clickable="true" @click="pressDigit('1')"><text class="key-label">1</text></div>
+        <div class="key" clickable="true" @click="pressDigit('2')"><text class="key-label">2</text></div>
+        <div class="key" clickable="true" @click="pressDigit('3')"><text class="key-label">3</text></div>
+        <div class="key op" clickable="true" @click="pressOp('＋')"><text class="key-label">＋</text></div>
+      </div>
+      <div class="row" if="!isSci">
+        <div class="key" clickable="true" @click="pressToggleSci"><text class="key-label">科学</text></div>
+        <div class="key" clickable="true" @click="pressDigit('0')"><text class="key-label">0</text></div>
+        <div class="key" clickable="true" @click="pressDot"><text class="key-label">.</text></div>
+        <div class="key eq" clickable="true" @click="pressEquals"><text class="key-label">＝</text></div>
+      </div>
+
+      <!-- Scientific keypad -->
+      <div class="row" if="isSci">
+        <div class="key" clickable="true" @click="pressConst('e')"><text class="key-label">e</text></div>
+        <div class="key" clickable="true" @click="pressConst('pi')"><text class="key-label">π</text></div>
+        <div class="key" clickable="true" @click="pressFunc('√')"><text class="key-label">√</text></div>
+        <div class="key" clickable="true" @click="pressHelp"><text class="key-label">?</text></div>
+      </div>
+      <div class="row" if="isSci">
+        <div class="key" clickable="true" @click="pressFunc('sin')"><text class="key-label">sin</text></div>
+        <div class="key" clickable="true" @click="pressFunc('cos')"><text class="key-label">cos</text></div>
+        <div class="key" clickable="true" @click="pressFunc('tan')"><text class="key-label">tan</text></div>
+        <div class="key" clickable="true" @click="pressFunc('log')"><text class="key-label">log</text></div>
+      </div>
+      <div class="row" if="isSci">
+        <div class="key" clickable="true" @click="pressToggleSci"><text class="key-label">普通</text></div>
+        <div class="key" clickable="true" @click="pressParen('(')"><text class="key-label">(</text></div>
+        <div class="key" clickable="true" @click="pressParen(')')"><text class="key-label">)</text></div>
+        <div class="key soft" clickable="true" @click="pressBackspace"><text class="key-label">←</text></div>
+      </div>
+    </div>
+  </div>
+  
+</template>
+
+<script>
+import router from '@system.router'
+import timeTicker from '../../common/timeTicker.js'
+import vibrator from '@system.vibrator'
+import storage from '../../common/storage.js'
+import { KEYS } from '../../common/keys.js'
+
+export default {
+  private: {
+    nowTime: '00:00',
+    unsubscribeTick: null,
+    display: '0',
+    current: '',
+    hasDot: false,
+    tokens: [], // sequence of [number, op, number, ...]
+    plusCount: 0,
+    lastPlusTs: 0,
+    _memoryClipboard: '',
+    isSci: false,
+    clearLabel: 'AC',
+    swipeStartX: null,
+    swipeEndX: null,
+    vibrateEnabled: true
+  },
+  onInit() {
+    timeTicker.start();
+    this.unsubscribeTick = timeTicker.subscribe(({ hours, minutes }) => {
+      const hh = hours < 10 ? '0' + hours : hours;
+      const mm = minutes < 10 ? '0' + minutes : minutes;
+      this.nowTime = `${hh}:${mm}`;
+    });
+    this.updateClearLabel();
+    // 读取震动开关
+    storage.get({
+      key: KEYS.VIBRATE_ENABLED,
+      success: (data) => {
+        if (typeof data !== 'undefined') {
+          this.vibrateEnabled = data === 'true';
+        }
+      }
+    });
+  },
+  onShow() {
+    // 返回页面时刷新震动开关状态
+    storage.get({
+      key: KEYS.VIBRATE_ENABLED,
+      success: (data) => {
+        if (typeof data !== 'undefined') {
+          this.vibrateEnabled = data === 'true';
+        }
+      }
+    });
+  },
+  updateClearLabel() {
+    // 固定为 AC，不再根据输入状态切换为 C
+    this.clearLabel = 'AC';
+  },
+  onVibrate(mode = 'short') {
+    if (!this.vibrateEnabled) return;
+    try {
+      if (vibrator && typeof vibrator.vibrate === 'function') {
+        vibrator.vibrate({ mode });
+      }
+    } catch (e) {}
+  },
+  pressToggleSci() {
+    this.onVibrate();
+    this.isSci = !this.isSci;
+  },
+  onTouchStart(e) {
+    if (!e || !e.touches || !e.touches[0]) return;
+    this.swipeStartX = e.touches[0].clientX;
+    this.swipeEndX = this.swipeStartX;
+  },
+  onTouchMove(e) {
+    if (!e || !e.touches || !e.touches[0]) return;
+    this.swipeEndX = e.touches[0].clientX;
+  },
+  onTouchEnd(e) {
+    if (this.swipeStartX === null) return;
+    const deltaX = this.swipeEndX - this.swipeStartX;
+    this.swipeStartX = null;
+    this.swipeEndX = null;
+    // Detect left swipe with threshold
+    if (deltaX < -60) {
+      router.push({ uri: '/pages/jisuanqi' });
+    }
+  },
+  pressConst(name) {
+    this.onVibrate();
+    const val = name === 'pi' ? Math.PI : Math.E;
+    // if currently entering, replace current
+    this.current = String(val);
+    this.hasDot = true;
+    this.display = this.formatTokensForDisplay(true);
+    this.updateClearLabel();
+  },
+  pressFunc(name) {
+    this.onVibrate();
+    // push function and opening bracket, user will input argument then press ) or =
+    if (this.current !== '' && this.current !== null) {
+      const num = parseFloat(this.current);
+      if (!Number.isNaN(num)) this.tokens.push(num);
+      this.current = '';
+      this.hasDot = false;
+    }
+    this.tokens.push(name);
+    this.tokens.push('(');
+    this.display = this.formatTokensForDisplay();
+    this.updateClearLabel();
+  },
+  pressParen(ch) {
+    this.onVibrate();
+    if (this.current !== '' && this.current !== null) {
+      const num = parseFloat(this.current);
+      if (!Number.isNaN(num)) this.tokens.push(num);
+      this.current = '';
+      this.hasDot = false;
+    }
+    this.tokens.push(ch);
+    this.display = this.formatTokensForDisplay();
+    this.updateClearLabel();
+  },
+  onDestroy() {
+    if (this.unsubscribeTick) {
+      try { this.unsubscribeTick(); } catch (e) {}
+      this.unsubscribeTick = null;
+    }
+  },
+  pressDigit(d) {
+    this.onVibrate();
+    if (this.current === '0') {
+      this.current = d;
+    } else {
+      this.current = (this.current || '') + d;
+    }
+    this.display = this.formatTokensForDisplay(true);
+    this.updateClearLabel();
+  },
+  pressDot() {
+    this.onVibrate();
+    if (this.hasDot) return;
+    if (!this.current) this.current = '0';
+    this.current += '.';
+    this.hasDot = true;
+    this.display = this.formatTokensForDisplay(true);
+    this.updateClearLabel();
+  },
+  pressOp(op) {
+    this.onVibrate();
+    // secret entry: 5-plus presses within 10 seconds
+    if (op === '＋') {
+      const now = Date.now();
+      if (now - this.lastPlusTs <= 10000) {
+        this.plusCount += 1;
+      } else {
+        this.plusCount = 1;
+      }
+      this.lastPlusTs = now;
+      if (this.plusCount >= 5) {
+        router.push({ uri: '/pages/index' });
+        this.plusCount = 0;
+        this.lastPlusTs = 0;
+      }
+    } else {
+      this.plusCount = 0;
+      this.lastPlusTs = 0;
+    }
+
+    // ensure starting from 0 when no input yet, so display shows 0+op
+    let insertedZero = false;
+    if ((this.current === '' || this.current === null) && this.tokens.length === 0) {
+      this.tokens.push(0);
+      insertedZero = true;
+    }
+    // push current number if present
+    if (this.current !== '' && this.current !== null) {
+      const num = parseFloat(this.current);
+      if (!Number.isNaN(num)) this.tokens.push(num);
+      this.current = '';
+      this.hasDot = false;
+    }
+    // if last token is operator, replace it
+    if (this.tokens.length > 0 && typeof this.tokens[this.tokens.length - 1] === 'string') {
+      this.tokens[this.tokens.length - 1] = op;
+    } else {
+      this.tokens.push(op);
+    }
+    this.display = this.formatTokensForDisplay();
+    if (!insertedZero) {
+      this.updateClearLabel();
+    }
+  },
+  pressEquals() {
+    this.onVibrate();
+    // finalize tokens with current
+    if (this.current !== '' && this.current !== null) {
+      const num = parseFloat(this.current);
+      if (!Number.isNaN(num)) this.tokens.push(num);
+      this.current = '';
+      this.hasDot = false;
+    }
+    // auto-close unmatched brackets
+    let balance = 0;
+    for (const t of this.tokens) {
+      if (t === '(') balance++;
+      else if (t === ')') balance--;
+    }
+    while (balance > 0) { this.tokens.push(')'); balance--; }
+    // trim trailing operator
+    if (this.tokens.length > 0 && typeof this.tokens[this.tokens.length - 1] === 'string') {
+      this.tokens.pop();
+    }
+    const result = this.evaluateTokens(this.tokens);
+    if (result === null || !isFinite(result)) {
+      this.display = '错误';
+      this.tokens = [];
+      return;
+    }
+    this.display = this.formatNumber(result);
+    this.tokens = [result];
+    this.updateClearLabel();
+  },
+  pressClear() {
+    this.onVibrate();
+    this.tokens = [];
+    this.current = '';
+    this.hasDot = false;
+    this.display = '0';
+    this.updateClearLabel();
+  },
+  pressBackspace() {
+    this.onVibrate();
+    if (!this.current) return;
+    const last = this.current.slice(-1);
+    this.current = this.current.slice(0, -1);
+    if (last === '.') this.hasDot = false;
+    if (this.current === '' || this.current === '-') {
+      this.display = this.formatTokensForDisplay();
+    } else {
+      this.display = this.formatTokensForDisplay(true);
+    }
+    this.updateClearLabel();
+  },
+  pressSign() {
+    this.onVibrate();
+    if (!this.current || this.current === '0') {
+      // toggle sign on zero results in -0 visually
+      this.current = this.current === '0' ? '-0' : '-0';
+    } else if (this.current.startsWith('-')) {
+      this.current = this.current.substring(1);
+    } else {
+      this.current = '-' + this.current;
+    }
+    this.display = this.formatTokensForDisplay(true);
+  },
+  pressPercent() {
+    this.onVibrate();
+    // Apply percent to current number if present, otherwise to the last numeric token
+    const applyPercent = (val) => {
+      const n = parseFloat(val);
+      if (Number.isNaN(n)) return null;
+      return n / 100;
+    };
+    if (this.current !== '' && this.current !== null) {
+      const n = applyPercent(this.current);
+      if (n !== null) {
+        this.current = this.formatNumber(n);
+        this.display = this.formatTokensForDisplay(true);
+      }
+      return;
+    }
+    for (let i = this.tokens.length - 1; i >= 0; i--) {
+      if (typeof this.tokens[i] === 'number') {
+        const n = applyPercent(this.tokens[i]);
+        if (n !== null) {
+          this.tokens[i] = n;
+          this.display = this.formatTokensForDisplay();
+        }
+        this.updateClearLabel();
+        break;
+      }
+    }
+  },
+  pressCopy() {
+    const text = String(this.display || '');
+    let copied = false;
+    try {
+      const pasteboard = require('@system.pasteboard');
+      if (pasteboard && pasteboard.setText) {
+        pasteboard.setText({ text });
+        copied = true;
+      }
+    } catch (e) {}
+    if (!copied) {
+      try {
+        const clipboard = require('@system.clipboard');
+        if (clipboard && clipboard.set) {
+          clipboard.set({ text });
+          copied = true;
+        }
+      } catch (e2) {}
+    }
+    if (!copied) {
+      this._memoryClipboard = text;
+    }
+  },
+  formatTokensForDisplay(includeCurrent = false) {
+    let out = '';
+    for (const t of this.tokens) {
+      if (typeof t === 'number') {
+        out += this.formatNumber(t);
+      } else {
+        // Show operators and parentheses without extra spaces
+        out += t;
+      }
+    }
+    if (includeCurrent && this.current !== '' && this.current !== null) {
+      out += this.current;
+    }
+    return out || '0';
+  },
+  formatNumber(n) {
+    const s = n.toString();
+    // limit to 12 chars if too long
+    if (s.length > 12) return Number(n.toFixed(8)).toString();
+    return s;
+  },
+  // Shunting-yard for + - × ÷ and functions with parentheses
+  evaluateTokens(tokens) {
+    if (!tokens || tokens.length === 0) return 0;
+    const ops = [];
+    const out = [];
+    const prec = { '＋': 1, '−': 1, '×': 2, '÷': 2 };
+    const isOp = (x) => x === '＋' || x === '−' || x === '×' || x === '÷';
+    const isFunc = (x) => x === 'sin' || x === 'cos' || x === 'tan' || x === 'log' || x === '√';
+    const applyOp = () => {
+      const op = ops.pop();
+      if (isOp(op)) {
+        const b = out.pop();
+        const a = out.pop();
+        if (typeof a !== 'number' || typeof b !== 'number') return out.push(NaN);
+        switch (op) {
+          case '＋': out.push(a + b); break;
+          case '−': out.push(a - b); break;
+          case '×': out.push(a * b); break;
+          case '÷': out.push(b === 0 ? NaN : a / b); break;
+          default: out.push(NaN);
+        }
+      } else if (isFunc(op)) {
+        const a = out.pop();
+        if (typeof a !== 'number') return out.push(NaN);
+        switch (op) {
+          case 'sin': out.push(Math.sin(a)); break;
+          case 'cos': out.push(Math.cos(a)); break;
+          case 'tan': out.push(Math.tan(a)); break;
+          case 'log': {
+            const lg = Math.log10 ? Math.log10(a) : Math.log(a) / Math.log(10);
+            out.push(lg);
+            break;
+          }
+          case '√': out.push(a < 0 ? NaN : Math.sqrt(a)); break;
+          default: out.push(NaN);
+        }
+      }
+    };
+    for (const t of tokens) {
+      if (typeof t === 'number') {
+        out.push(t);
+      } else if (isFunc(t)) {
+        ops.push(t);
+      } else if (t === '(') {
+        ops.push(t);
+      } else if (t === ')') {
+        while (ops.length && ops[ops.length - 1] !== '(') applyOp();
+        if (ops.length && ops[ops.length - 1] === '(') ops.pop();
+        if (ops.length && isFunc(ops[ops.length - 1])) applyOp();
+      } else if (isOp(t)) {
+        while (ops.length && isOp(ops[ops.length - 1]) && prec[ops[ops.length - 1]] >= prec[t]) applyOp();
+        ops.push(t);
+      }
+    }
+    while (ops.length) {
+      if (ops[ops.length - 1] === '(') return null; // unmatched
+      applyOp();
+    }
+    const res = out.pop();
+    if (res === undefined || Number.isNaN(res)) return null;
+    return res;
+  }
+}
+</script>
+
+<style>
+.page {
+  width: 432px;
+  height: 514px;
+  background-color: #000000;
+}
+.display {
+  position: absolute;
+  top: 122px;
+  left: 20px;
+  width: 392px;
+  height: 98px;
+  background-color: #262626;
+  border-radius: 24px;
+  padding: 0 16px;
+  justify-content: flex-end;
+  align-items: center;
+}
+.display-text {
+  font-size: 40px;
+  font-weight: bold;
+  color: white;
+  text-overflow: ellipsis;
+  lines: 1;
+  width: 100%;
+  text-align: right;
+}
+.keys {
+  position: absolute;
+  top: 236px;
+  left: 20px;
+  width: 392px;
+  height: 260px;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.row {
+  width: 100%;
+  height: 48px;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.key {
+  width: 88px;
+  height: 48px;
+  background-color: #000000;
+  border-radius: 24px;
+  font-size: 28px;
+  font-weight: bold;
+  align-items: center;
+  justify-content: center;
+}
+.key-label { color: white; font-size: 30px; font-weight: bold; }
+.key-icon { width: 32px; height: 32px; }
+.key.wide { width: 184px; }
+.key.op { background-color: #000000; }
+.key.eq { background-color: #FF7A00; }
+.key.soft { background-color: #000000; color: rgba(255,255,255,0.9); }
+</style>

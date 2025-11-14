@@ -1,0 +1,3 @@
+export const KEYS = {
+  VIBRATE_ENABLED: 'VIBRATE_ENABLED'
+}

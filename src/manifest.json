@@ -1,6 +1,6 @@
 {
-  "package": "com.bandbbs.ebook.plus",
-  "name": "电子书",
+  "package": "Watch.Bc.Reader",
+  "name": "计算器",
   "versionName": "4.4.3.RW",
   "versionCode": 251114,
   "minPlatformVersion": 1100,
@@ -18,6 +18,12 @@
     },
     {
       "name": "system.prompt"
+    },
+    {
+      "name": "system.pasteboard"
+    },
+    {
+      "name": "system.clipboard"
     },
     {
       "name": "system.file"
@@ -57,9 +63,13 @@
     "logLevel": "log",
     "designWidth": 432
   },
-  "router": {
-    "entry": "pages/index",
+ "router": {
+    "entry": "pages/calculator",
     "pages": {
+      "pages/calculator": {
+        "component": "calculator",
+        "launchMode": "singleTask"
+      },
       "pages/index": {
         "component": "index",
         "launchMode": "singleTask"

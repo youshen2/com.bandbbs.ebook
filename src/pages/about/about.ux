@@ -4,7 +4,7 @@
       <img static src="/common/images/about_img.png" style="width: 100%;position: absolute;left: 48px;top: 40px;"/>
 
       <text style="position: absolute;left: 74px;top: 142px;width: 282px;height: 48px;font-size: 36px;font-weight: bold;color: #FFFFFF;">
-        弦{{appName}}
+        BcReader
       </text>
       <text style="position: absolute;left: 74px;top: 184px;width: 204px;height: 48px;font-size: 36px;font-weight: bold;color: rgba(255, 255, 255, 0.6);">
         {{displayVersion}}
@@ -28,7 +28,7 @@
   export default {
 	private: {
     nowTime:':',
-    appName:'弦电子书',
+    appName:'BcReader',
     appVer:'1.0.0',
     displayVersion:'1.0.0',
     versionType:'',

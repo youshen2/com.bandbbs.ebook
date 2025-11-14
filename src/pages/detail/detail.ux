@@ -43,6 +43,7 @@
 		<marquee scrollamount="50"text-offset="25" show="{{showSetting}}" style="position: absolute;left: 130px;top: 58px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
 			{{currentChapterName}}
 		</marquee>
+		<text if="{{showProgressBar && showProgressBarPercent}}" class="progress-bar-percent" style="bottom: {{progressBarHeight + 1}}px;">{{Math.round(chapterProgress)}}%</text>
 
 		<img show="{{showSetting}}" src="/common/images/bt.png" style="position: absolute;left: 0px;top: 412px;width: 432px;height: 102px;" />
         <img show="{{showSetting}}" src="{{ isKeepScreenOn ? '/common/images/brightness.png' : '/common/images/brightness_off.png' }}" @click="toggleKeepScreenOn" style="position: absolute;left: 38px;top: 408px;width: 82px;height: 82px;"/>
@@ -57,7 +58,7 @@
         <img show="{{showSetting}}" src="/common/images/add_bookmark.png" @click="addBookmark" @longpress="gotoBookmarks" style="position: absolute;left: 322px;top: 408px;width: 82px;height: 82px;"/>
 		
 		<div if="{{showProgressBar && !showSetting}}" class="progress-bar-container" style="height: {{progressBarHeight}}px;">
-			<progress percent="{{chapterProgress}}" style="left: 40px;width: 352px;color: #E1DDDD;stroke-width: {{progressBarHeight}}px;layer-color: #00000000;"></progress>
+			<progress percent="{{chapterProgress}}" style="left: 35px;width: 362px;color: #E1DDDD;stroke-width: {{progressBarHeight}}px;layer-color: #00000000;"></progress>
 		</div>
 	</div>
   </template>
@@ -117,6 +118,7 @@
 		chapterProgress: 0,
 		showProgressBar: true,
 		progressBarHeight: 8,
+		showProgressBarPercent: false,
 		gestureMode: 'single',
 		gestureClickCount: 0,
 		gestureClickTimeout: null,
@@ -237,6 +239,7 @@
 			{ key: 'EBOOK_AUTO', prop: 'auto', type: 'json', default: null },
 			{ key: 'EBOOK_SHOW_PROGRESS_BAR', prop: 'showProgressBar', type: 'bool', default: true },
 			{ key: 'EBOOK_PROGRESS_BAR_HEIGHT', prop: 'progressBarHeight', type: 'int', default: 8 },
+			{ key: 'EBOOK_SHOW_PROGRESS_BAR_PERCENT', prop: 'showProgressBarPercent', type: 'bool', default: false },
 			{ key: 'EBOOK_GESTURE', prop: 'gestureMode', type: 'string', default: 'single' },
 			{ key: 'EBOOK_CHAPTER_SWITCH_HEIGHT', prop: 'chapterSwitchHeight', type: 'int', default: 80 },
 			{ key: 'EBOOK_CHAPTER_SWITCH_SENSITIVITY', prop: 'chapterSwitchSensitivity', type: 'int', default: 50 },
@@ -410,10 +413,23 @@
 				this.allSize = data.length;
 				this.updatePageNumber();
                 if (this.preloadChapter && this.allSize > 0) {
-                    file.readText({
+                    file.readArrayBuffer({
                         uri: this.cPath,
-                        success: (textData) => {
-                            this.chapterContentCache = textData.text;
+                        success: (arrData) => {
+                            try {
+                                if (!arrData.buffer || arrData.buffer.byteLength === 0) {
+                                    this.chapterContentCache = "";
+                                } else {
+                                    const buffer = new Uint8Array(arrData.buffer);
+                                    const chars = [];
+                                    for(let i = 0; i < buffer.length; i += 2){
+                                      chars.push(String.fromCharCode(buffer[i+1]*256 + buffer[i]));
+                                    }
+                                    this.chapterContentCache = chars.join('');
+                                }
+                            } catch(e) {
+                                this.chapterContentCache = null;
+                            }
                             if(callback) callback();
                         },
                         fail: () => {
@@ -501,14 +517,15 @@
 		file.readArrayBuffer({
 		  uri: this.cPath, position: readOffset, length: length,
 		  success: (data) => {
-			if (!data.buffer || data.buffer.length === 0) {
+			if (!data.buffer || data.buffer.byteLength === 0) {
 				cb('', 0);
 				return;
 			}
 			try {
+                const buffer = new Uint8Array(data.buffer);
                 const chars = [];
-				for(let i = 0; i < data.buffer.length; i += 2){
-				  chars.push(String.fromCharCode(data.buffer[i+1]*256 + data.buffer[i]));
+				for(let i = 0; i < buffer.length; i += 2){
+				  chars.push(String.fromCharCode(buffer[i+1]*256 + buffer[i]));
 				}
 				let str = chars.join('');
                 
@@ -591,17 +608,12 @@
 			success: function(rect){
 				let removedHeight = rect.height;
 				
-				let oldPage1 = that.page1;
-				if (oldPage1 && oldPage1 !== that.page2) {
-					oldPage1.text = null;
-				}
-				that.page1 = that.page2 || oldPage1;
+				that.page1 = that.page2;
 				that.page2 = nextPageData;
-				oldPage1 = null;
 				
 				const newScrollPos = scrollPosBeforeLoad - removedHeight + that.lineHeight;
-				that.scrollTopValue = newScrollPos;
-				that.currentScrollTop = newScrollPos;
+				that.scrollTopValue = Math.max(0, newScrollPos);
+				that.currentScrollTop = Math.max(0, newScrollPos);
 
 				that.currentFileOffset = that.page1.offset;
 				that.updateChapterProgress();
@@ -1100,7 +1112,13 @@
 		}
 
 		if (this.allSize > 0) {
-			const progress = (this.currentFileOffset / this.allSize) * 100;
+			let totalScrolledBytes = this.currentFileOffset;
+            if (this.contentHeight > 0) {
+                const loadedContentBytes = this.page1.length + (this.page2 ? this.page2.length : 0);
+                const bytesPerPixel = loadedContentBytes / this.contentHeight;
+                totalScrolledBytes += this.currentScrollTop * bytesPerPixel;
+            }
+			const progress = (totalScrolledBytes / this.allSize) * 100;
 			this.chapterProgress = Math.min(100, Math.max(0, progress || 0));
 		} else {
 			this.chapterProgress = 0;
@@ -1118,10 +1136,18 @@
 .progress-bar-container {
 	position: absolute;
 	bottom: 0px;
+	width: 432px;
+	justify-content: center;
+	align-items: center;
+}
+.progress-bar-percent {
+	position: absolute;
 	left: 0px;
 	width: 432px;
-	padding: 0 6px;
+	text-align: center;
+	color: rgba(255, 255, 255, 0.6);
+	font-size: 20px;
+	font-weight: bold;
 }
 </style>
-
 

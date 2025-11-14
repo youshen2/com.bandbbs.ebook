@@ -2,7 +2,6 @@ import file from '@system.file'
 
 let storageCache = null;
 const fileSavedPath = 'internal://files/books/storage-api/savedFile';
-let saveTimeout = null;
 
 function loadIfNeeded(callback) {
     if (storageCache !== null) {
@@ -26,17 +25,13 @@ function loadIfNeeded(callback) {
     });
 }
 
-function scheduleSave() {
-    if (saveTimeout) {
-        clearTimeout(saveTimeout);
-    }
-    saveTimeout = setTimeout(() => {
+function saveToFile() {
+    if (storageCache !== null) {
         file.writeText({
             uri: fileSavedPath,
             text: JSON.stringify(storageCache)
         });
-        saveTimeout = null;
-    }, 500);
+    }
 }
 
 function get(param){
@@ -59,7 +54,7 @@ function get(param){
 
 function save(data,param){
     storageCache = data;
-    scheduleSave();
+    saveToFile();
     if(param.success){
         param.success();
     }
@@ -71,7 +66,7 @@ function save(data,param){
 function set(param){
     loadIfNeeded(data => {
         data[param.key] = param.value;
-        scheduleSave();
+        saveToFile();
         if(param.success){
             param.success();
         }
@@ -83,7 +78,7 @@ function set(param){
 
 function clear(param){
     storageCache = {};
-    scheduleSave();
+    saveToFile();
     if (param && param.success) param.success();
     if (param && param.complete) param.complete();
 }
@@ -91,7 +86,7 @@ function clear(param){
 function del(param){
     loadIfNeeded(data => {
         delete data[param.key];
-        scheduleSave();
+        saveToFile();
         if(param.success) {
             param.success();
         }

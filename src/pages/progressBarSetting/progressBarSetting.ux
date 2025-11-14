@@ -1,26 +1,24 @@
 <import name="number" src="../../components/number_choose/number_choose"></import>
 <template>
   <div class="page" style="flex-direction: column;">
-
-	<div class="preview-container">
-		<div class="preview-screen">
-			<div class="content-area">
-				<text static class="preview-text">
-					文本内容区域
-				</text>
+	<list class="list">
+		<list-item class="item" @click="toggleShowProgressBar" type="item">
+			<div class="item-content">
+				<text class="itemtext" static>显示进度条</text>
+				<text class="itemtext2" static>在底部显示进度条</text>
 			</div>
-			<div class="progress-bar-preview" style="height: {{progressBarHeight / 3}}px;">
-				<progress static class="p1" percent="50" style="width: 100%;color: #E1DDDD;stroke-width: {{progressBarHeight / 3}}px;layer-color: #00000000;"></progress>
+			<img src="{{showProgressBar ? '/common/images/Switch_ON.png' : '/common/images/Switch_OFF.png'}}" style="width:64px;height: 48px;"/>
+		</list-item>
+		<list-item class="item" @click="toggleShowPercent" if="{{showProgressBar}}" type="item">
+			<div class="item-content">
+				<text class="itemtext" static>显示百分比</text>
+				<text class="itemtext2" static>在上方显示百分比</text>
 			</div>
-		</div>
-		<div class="info-panel">
-			<text static class="info-title">进度条高度</text>
-			<text class="info-value">{{progressBarHeight}}px</text>
-			<text static class="info-desc">章节进度指示</text>
-		</div>
-	</div>
+			<img src="{{showProgressBarPercent ? '/common/images/Switch_ON.png' : '/common/images/Switch_OFF.png'}}" style="width:64px;height: 48px;"/>
+		</list-item>
+	</list>
 	
-	<number style="position: absolute;top:415px;" max.static="50" min.static="5" step.static="1" value="{{progressBarHeight}}" @change="changeHeight" name.static="调整高度"></number>
+	<number if="{{showProgressBar}}" style="position: absolute;top:415px;" max.static="50" min.static="5" step.static="1" value="{{progressBarHeight}}" @change="changeHeight" name.static="调整高度"></number>
 
 	<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
 	<img static src="/common/images/reset.png" @click="reset" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
@@ -28,7 +26,7 @@
 	  {{nowTime}}
 	</text>
 	<text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
-		进度条高度
+		进度条设置
 	</text>
   </div>
 </template>
@@ -36,10 +34,11 @@
 <script>
 import router from '@system.router'
 import storage from '../../common/storage.js'
-import app from '@system.app'
 
 export default {
   private: {
+	showProgressBar: true,
+	showProgressBarPercent: false,
 	progressBarHeight: 8,
 	nowTime: "00:00",
 	timer: null
@@ -48,10 +47,8 @@ export default {
 		const date = new Date();
 		let hours = date.getHours();
 		let minutes = date.getMinutes();
-
 		hours = hours < 10 ? '0' + hours : hours;
 		minutes = minutes < 10 ? '0' + minutes : minutes;
-
 		this.nowTime = `${hours}:${minutes}`;
 	},
   onInit() {
@@ -62,11 +59,24 @@ export default {
     storage.get({
       key: 'EBOOK_PROGRESS_BAR_HEIGHT',
       success:(data)=>{
-        if (data) {
-          this.progressBarHeight = parseInt(data)
-        }
-      }
-	})
+        if (data) this.progressBarHeight = parseInt(data)
+      },
+	  default: '8'
+	});
+	storage.get({
+      key: 'EBOOK_SHOW_PROGRESS_BAR',
+      success:(data)=>{
+        this.showProgressBar = data === 'true'
+      },
+	  default: 'true'
+	});
+	storage.get({
+      key: 'EBOOK_SHOW_PROGRESS_BAR_PERCENT',
+      success:(data)=>{
+        this.showProgressBarPercent = data === 'true'
+      },
+	  default: 'false'
+	});
   },
   onDestroy(){
 	  if (this.timer) {
@@ -83,20 +93,28 @@ export default {
   },
   reset() {
 	this.progressBarHeight = 8;
-	storage.set({
-		key: "EBOOK_PROGRESS_BAR_HEIGHT",
-		value: this.progressBarHeight.toString(),
-	});
+	this.showProgressBar = true;
+	this.showProgressBarPercent = false;
+	storage.set({ key: "EBOOK_PROGRESS_BAR_HEIGHT", value: '8' });
+	storage.set({ key: "EBOOK_SHOW_PROGRESS_BAR", value: 'true' });
+	storage.set({ key: "EBOOK_SHOW_PROGRESS_BAR_PERCENT", value: 'false' });
   },
   back(){
-	storage.set({
-	  		key: 'EBOOK_PROGRESS_BAR_HEIGHT',
-	  		value: this.progressBarHeight.toString(),
-	  	})
   	router.back();
   },
-  exit(){
-	  app.terminate();
+  toggleShowProgressBar() {
+	this.showProgressBar = !this.showProgressBar;
+	storage.set({
+		key: 'EBOOK_SHOW_PROGRESS_BAR',
+		value: this.showProgressBar.toString()
+	});
+  },
+  toggleShowPercent() {
+	this.showProgressBarPercent = !this.showProgressBarPercent;
+	storage.set({
+		key: 'EBOOK_SHOW_PROGRESS_BAR_PERCENT',
+		value: this.showProgressBarPercent.toString()
+	});
   }
 }
 </script>
@@ -107,84 +125,46 @@ export default {
 	height: 514px;
 	background-color: #000000;
 }
-
-.preview-container {
+.list {
+	width: 432px;
+	height: 514px;
 	position: absolute;
-	left: 54px;
-	top: 86px;
-	width: 324px;
-	height: 280px;
-	flex-direction: row;
-	justify-content: space-between;
-	align-items: center;
-	padding: 10px;
+	top:0px;
+	left:0px;
+  padding: 116px 12px;
 }
 
-.preview-screen {
-	width: 144px;
-	height: 171px;
-	background-color: #1a1a1a;
-	border-radius: 20px;
-	border: 3px solid #333333;
-	flex-direction: column;
-	overflow: hidden;
-	position: relative;
-}
-
-.content-area {
-	flex: 1;
+.item {
 	width: 100%;
+	height: 112px;
+	padding: 14px 20px;
+	margin-bottom: 8px;
 	background-color: #262626;
+	border-radius: 36px;
 	align-items: center;
-	justify-content: center;
-	padding: 8px;
+  justify-content: space-between;
 }
-
-.preview-text {
-	font-size: 20px;
-	font-weight: bold;
-	color: white;
-	text-align: center;
-	lines: 3;
-	text-overflow: ellipsis;
-}
-
-.progress-bar-preview {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	width: 100%;
-	background-color: transparent;
-}
-
-.info-panel {
+.item-content {
+	height: 100%;
+	flex:1;
 	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	flex: 1;
-	margin-left: 10px;
+	justify-content: space-between;
 }
-
-.info-title {
-	font-size: 28px;
+.itemtext {
+	font-size: 32px;
+	line-height:40px;
+	width: 100%;
 	font-weight: bold;
 	color: white;
-	line-height: 38px;
-	margin-bottom: 6px;
+	text-overflow: ellipsis;
+	lines: 1;
 }
-
-.info-value {
-	font-size: 48px;
+.itemtext2 {
+	font-size: 28px;
+	line-height: 37px;
 	font-weight: bold;
-	color: #0D6EFF;
-	line-height: 56px;
-	margin-bottom: 10px;
-}
-
-.info-desc {
-	font-size: 22px;
 	color: rgba(255,255,255,0.6);
-	line-height: 30px;
-	text-align: center;
+	text-overflow: ellipsis;
+	lines: 1;
 }
 </style>

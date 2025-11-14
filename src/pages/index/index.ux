@@ -103,6 +103,7 @@ export default {
   },
   onShow() {
     this.isNavigating = false;
+    this.currentPage = 0;
     this.loadSettingsAndFiles();
   },
   getStorage(key, defaultValue) {

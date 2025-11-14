@@ -156,9 +156,6 @@
 	  height: 514px;
 	  background-color: #000000;
   }
-	.item2 {
-		background-color: #0D6EFF;
-	}
 
   .list {
 	width: 432px;
@@ -206,4 +203,7 @@
 	flex-direction: column;
 	justify-content: space-between;
 }
+	.item2 {
+		background-color: #0D6EFF;
+	}
   </style>

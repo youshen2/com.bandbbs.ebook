@@ -1,7 +1,7 @@
 <template>
     <div class="page" style="flex-direction: column;">
       <div class="item">
-        <text static style="font-size: 24px;font-weight:bold;color: rgba(255, 255, 255, 0.6);text-align: center;margin-bottom:80px">开启后将一次性加载整章内容到内存，可提升阅读流畅度，但会增加章节加载时间。</text>
+        <text static style="font-size: 24px;font-weight:bold;color: rgba(255, 255, 255, 0.6);text-align: center;margin-bottom:80px">开启后将一次性加载整章内容到内存中，一定程度上提高流畅度。</text>
         <img static src="/common/images/Switch_ON.png" style="width: 113px;height: 80px;" @click="onClick" if="{{enable}}"/>
         <img static src="/common/images/Switch_OFF.png" style="width: 113px;height: 80px;" @click="onClick" else/>
         <text style="font-size: 36px;font-weight:bold;color: white;width: 100%;text-align: center;">
@@ -82,7 +82,7 @@
     left: 20px;
     top: 126px;
     width: 392px;
-    height: 308px;
+    height: 328px;
     border-radius: 36px;
     flex-direction: column;
     border: 3px solid #262626;

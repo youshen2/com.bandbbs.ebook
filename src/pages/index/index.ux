@@ -225,6 +225,7 @@ export default {
     const progress = await bookStorage.get(item.dirName);
     progress.lastReadTimestamp = Date.now();
     await bookStorage.set(item.dirName, progress);
+    globalThis.enteringDetailView = true;
 
     router.push({
         uri: '/pages/detail',

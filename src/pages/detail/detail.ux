@@ -678,13 +678,6 @@
         
         this.isAtChapterEnd = false;
 
-        let oldPage1 = this.page1;
-        let oldPage2 = this.page2;
-        this.page1 = null;
-        this.page2 = null;
-        oldPage1 = null;
-        oldPage2 = null;
-
         this.loadChapter(prevChapterIndex, () => {
             this.loadEndAndScroll();
         });
@@ -843,7 +836,7 @@
 		
 		this.page1 = null;
 		this.page2 = null;
-		this.allChapters = null;
+		chapterManager.clearCache();
 		
 		brightness.setKeepScreenOn({ keepScreenOn: false }); 
 
@@ -1003,7 +996,7 @@
 		if (!progress.bookmarks) { progress.bookmarks = []; }
 		
 		const chapter = await chapterManager.getChapterByIndex(this.name, this.currentChapterIndexInAll);
-        if (!chapter) {
+        if (!chapter || chapter.index === undefined) {
             prompt.showToast({ message: '无法添加书签，章节信息错误' });
 			this.isProcessingClick = false;
             return;
@@ -1018,9 +1011,6 @@
 			time: new Date().getTime(), 
 			name: `书签${progress.bookmarks.length + 1}` 
 		};
-
-		const exists = progress.bookmarks.some(bm => bm.chapterIndex === newBookmark.chapterIndex && bm.offsetInChapter === newBookmark.offsetInChapter);
-		if (exists) { prompt.showToast({ message: '书签已存在' }); return; }
 
 		progress.bookmarks.push(newBookmark);
 		progress.bookmarks.sort((a, b) => a.chapterIndex - b.chapterIndex || a.offsetInChapter - b.offsetInChapter);
@@ -1085,3 +1075,4 @@
 	padding: 0 6px;
 }
 </style>
+

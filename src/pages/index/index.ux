@@ -9,7 +9,7 @@
       <list class="list" if="{{shelfStyle === 'list'}}">
 		  <list-item for="{{visibleBooks}}" class="item" @click="selectFile($item)" type="nook">
 			  <marquee scrollamount="22" class="itemtext" text-offset="25">{{$item.name}}</marquee>
-			  <marquee scrollamount="40" class="itemtext2">{{roundToDecimal((($item.lastReadChapterIndex + 1) / $item.chapterCount) * 100, 2) || 0}}% · 看到 {{$item.lastReadChapterIndex + 1}} / {{$item.chapterCount}} 章</marquee>
+			  <marquee scrollamount="40" class="itemtext2">{{ $item.isLastRead ? '上次阅读 · ' : '' }}{{roundToDecimal(((($item.progress.chapterIndex || 0) + 1) / $item.chapterCount) * 100, 2) || 0}}% · 看到 {{(($item.progress.chapterIndex || 0) + 1)}} / {{$item.chapterCount}} 章</marquee>
 		  </list-item>
           <list-item type="pagination" class="pagination-container" if="{{totalPages > 1}}">
             <div class="pagination-controls">
@@ -25,7 +25,7 @@
             <img if="{{$item.hasRealCover}}" class="cover-image" src="internal://files/books/{{$item.dirName}}/cover.jpg" />
             <div class="cover-content">
               <marquee scrollamount="30" class="itemtext" text-offset="25">{{$item.name}}</marquee>
-              <marquee scrollamount="40" class="itemtext2" text-offset="25">{{roundToDecimal((($item.lastReadChapterIndex + 1) / $item.chapterCount) * 100, 2) || 0}}% · 看到 {{$item.lastReadChapterIndex + 1}} / {{$item.chapterCount}} 章</marquee>
+              <marquee scrollamount="40" class="itemtext2" text-offset="25">{{ $item.isLastRead ? '上次阅读 · ' : '' }}{{roundToDecimal(((($item.progress.chapterIndex || 0) + 1) / $item.chapterCount) * 100, 2) || 0}}% · 看到 {{(($item.progress.chapterIndex || 0) + 1)}} / {{$item.chapterCount}} 章</marquee>
             </div>
           </list-item>
           <list-item type="pagination" class="pagination-container" if="{{totalPages > 1}}">
@@ -59,11 +59,8 @@ import bookStorage from '../../common/bookStorage.js'
 import storage from '../../common/storage.js';
 import app from '@system.app';
 
-const INIT_PATH = "internal://files/books";
-
 export default {
   private: {
-    debugOutput: "初始化中...",
     nowTime: "00:00",
     timer: null,
     shelfStyle: 'list',
@@ -72,7 +69,9 @@ export default {
     visibleBooks: [],
     currentPage: 0,
     totalPages: 1,
-    pageSize: 6
+    pageSize: 6,
+    lastReadOnTop: true,
+    checkCover: false
   },
   exit(){
 	  app.terminate();
@@ -92,6 +91,7 @@ export default {
     this.timer = setInterval(() => {
       this.updateTime();
     }, 1000);
+    bookStorage.load();
   },
   onDestroy(){
 	  if (this.timer) {
@@ -119,115 +119,112 @@ export default {
     });
   },
   async loadSettingsAndFiles() {
-    const [pageSize, shelfStyle] = await Promise.all([
-      this.getStorage('EBOOK_SHELF_PAGE_SIZE', 12),
-      this.getStorage('EBOOK_SHELF_STYLE', 'list')
+    const [pageSize, shelfStyle, lastReadOnTop, checkCover] = await Promise.all([
+      this.getStorage('EBOOK_SHELF_PAGE_SIZE', '12'),
+      this.getStorage('EBOOK_SHELF_STYLE', 'list'),
+      this.getStorage('EBOOK_TOP_LAST_READ', 'true'),
+      this.getStorage('EBOOK_CHECK_COVER', 'false')
     ]);
 
     this.pageSize = parseInt(pageSize);
     this.shelfStyle = shelfStyle;
+    this.lastReadOnTop = lastReadOnTop === 'true';
+    this.checkCover = checkCover === 'true';
 
     this.loadFileList();
   },
-  loadFileList() {
-    const that = this;
-    const bookshelfUri = INIT_PATH + '/bookshelf.json';
-    file.readText({
-        uri: bookshelfUri,
-        success: function(data) {
-            try {
-                let books = JSON.parse(data.text);
-                if (that.shelfStyle === 'cover') {
-                    const coverCheckPromises = books.map(book => {
-                        return new Promise(resolve => {
-                            const coverPath = `internal://files/books/${book.dirName}/cover.jpg`;
-                            file.access({
-                                uri: coverPath,
-                                success: () => {
-                                    book.hasRealCover = true;
-                                    resolve();
-                                },
-                                fail: () => {
-                                    book.hasRealCover = false;
-                                    resolve();
-                                }
-                            });
-                        });
-                    });
-
-                    Promise.all(coverCheckPromises).then(() => {
-                        that.allBooks = books;
-                        that.loadPage(0);
-                        books = null;
-                    });
-                }
-                that.allBooks = books;
-                that.updateBooksWithProgress();
-                books = null;
-            } catch (e) {
-                that.allBooks = [];
-                that.visibleBooks = [];
-            }
-        },
-        fail: function() {
-            that.allBooks = [];
-            that.visibleBooks = [];
+  async loadFileList() {
+    this.allBooks = await bookStorage.getBooks();
+    this.processBooks();
+    this.loadPage(this.currentPage);
+  },
+  processBooks() {
+    if (this.lastReadOnTop && this.allBooks.length > 1) {
+      let lastReadIndex = -1;
+      let latestTimestamp = 0;
+      
+      this.allBooks.forEach((book, index) => {
+        book.isLastRead = false;
+        if (book.progress && book.progress.lastReadTimestamp > latestTimestamp) {
+          latestTimestamp = book.progress.lastReadTimestamp;
+          lastReadIndex = index;
         }
-    });
-  },
+      });
 
-  roundToDecimal(num, decimalPlaces) {
-    return num.toFixed(decimalPlaces)
-  },
-
-  async updateBooksWithProgress() {
-      const booksToUpdate = [...this.allBooks];
-      for (let i = 0; i < booksToUpdate.length; i++) {
-          const book = booksToUpdate[i];
-          try {
-              const progress = await bookStorage.get(book.dirName);
-              if (progress && progress.chapterIndex !== undefined && progress.chapterIndex !== null) {
-                  book.lastReadChapterIndex = progress.chapterIndex;
-              } else {
-                book.lastReadChapterIndex = 0
-              }
-          } catch (e) {
-            book.lastReadChapterIndex = 0
-          }
+      if (lastReadIndex > -1) {
+        const lastReadBook = this.allBooks.splice(lastReadIndex, 1)[0];
+        lastReadBook.isLastRead = true;
+        this.allBooks.unshift(lastReadBook);
       }
-      this.allBooks = booksToUpdate;
-      this.loadPage(this.currentPage);
-  },
-
-  loadPage(page) {
-    this.totalPages = Math.ceil(this.allBooks.length / this.pageSize);
-    if (this.totalPages === 0) this.totalPages = 1;
-    
-    if (page >= 0 && page < this.totalPages) {
-      const start = page * this.pageSize;
-      const end = start + this.pageSize;
-      this.visibleBooks = this.allBooks.slice(start, end);
-      this.currentPage = page;
     }
   },
+  roundToDecimal(num, decimalPlaces) {
+    return parseFloat(num).toFixed(decimalPlaces);
+  },
+  loadPage(page) {
+    this.totalPages = Math.ceil(this.allBooks.length / this.pageSize) || 1;
+    let safePage = Math.max(0, Math.min(page, this.totalPages - 1));
+    
+    if (this.totalPages > 0) {
+      const start = safePage * this.pageSize;
+      const end = start + this.pageSize;
+      this.visibleBooks = this.allBooks.slice(start, end);
+      this.currentPage = safePage;
+      if (this.shelfStyle === 'cover') {
+        this.checkCovers();
+      }
+    } else {
+      this.visibleBooks = [];
+      this.currentPage = 0;
+    }
+  },
+  checkCovers() {
+    this.visibleBooks.forEach((book, index) => {
+      if (!this.checkCover) {
+        if (!book.hasRealCover) {
+          const newBook = Object.assign({}, book, { hasRealCover: true });
+          this.visibleBooks.splice(index, 1, newBook);
+        }
+        return;
+      }
 
+      const coverPath = `internal://files/books/${book.dirName}/cover.jpg`;
+      file.access({
+        uri: coverPath,
+        success: () => {
+          if (!book.hasRealCover) {
+            const newBook = Object.assign({}, book, { hasRealCover: true });
+            this.visibleBooks.splice(index, 1, newBook);
+          }
+        },
+        fail: () => {
+          if (book.hasRealCover) {
+             const newBook = Object.assign({}, book, { hasRealCover: false });
+             this.visibleBooks.splice(index, 1, newBook);
+          }
+        }
+      });
+    });
+  },
   prevPage() {
     if (this.currentPage > 0) {
       this.loadPage(this.currentPage - 1);
     }
   },
-
   nextPage() {
     if (this.currentPage < this.totalPages - 1) {
       this.loadPage(this.currentPage + 1);
     }
   },
-
-  selectFile(item) {
+  async selectFile(item) {
     if (this.isNavigating) {
         return;
     }
     this.isNavigating = true;
+
+    const progress = await bookStorage.get(item.dirName);
+    progress.lastReadTimestamp = Date.now();
+    await bookStorage.set(item.dirName, progress);
 
     router.push({
         uri: '/pages/detail',
@@ -236,14 +233,12 @@ export default {
         }
     });
   },
-
   routerTo(page) {
     router.push({
       uri: `/pages/${page}`
     });
   }
 };
-
 </script>
 
 <style>
@@ -285,6 +280,7 @@ export default {
     height: 84px;
     background-color: #333;
     margin-right: 16px;
+    border-radius: 8px;
 }
 
 .cover-content {
@@ -293,6 +289,7 @@ export default {
     align-items: flex-start;
     flex: 1;
     height: 100%;
+    overflow: hidden;
 }
 
 .itemtext {
@@ -336,5 +333,4 @@ export default {
     font-weight: bold;
     color: white;
 }
-
 </style>

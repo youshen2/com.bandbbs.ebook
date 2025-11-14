@@ -23,8 +23,6 @@ import file from '@system.file'
 import storage from '../../common/storage.js'
 import bookStorage from '../../common/bookStorage.js'
 
-const BOOKSHELF_URI = 'internal://files/books/bookshelf.json';
-
 export default {
     private: {
         nowTime: "00:00",
@@ -129,44 +127,19 @@ export default {
                 that.updateBookshelf(dirName);
             },
             fail: (data, code) => {
-                // 即使删除目录失败，也尝试更新书架
-                // 这可以处理目录不存在但书架条目存在的情况
                 that.updateBookshelf(dirName);
             }
         });
     },
-    updateBookshelf(dirName) {
+    async updateBookshelf(dirName) {
         if (!dirName) {
-            // 双重保险
             prompt.showToast({ message: '删除成功', duration: 1000 });
             router.replace({ uri: '/pages/index' });
             return;
         }
-        file.readText({
-            uri: BOOKSHELF_URI,
-            success: function(data) {
-                try {
-                    let bookshelf = JSON.parse(data.text);
-                    const newBookshelf = bookshelf.filter(b => b.dirName !== dirName);
-                    bookshelf = null;
-                    file.writeText({
-                        uri: BOOKSHELF_URI,
-                        text: JSON.stringify(newBookshelf),
-                        complete: function() {
-                            prompt.showToast({ message: '删除成功', duration: 1000 });
-                            router.replace({ uri: '/pages/index' });
-                        }
-                    });
-                } catch (e) {
-                     prompt.showToast({ message: '删除成功', duration: 1000 });
-                     router.replace({ uri: '/pages/index' });
-                }
-            },
-            fail: function() {
-                prompt.showToast({ message: '删除成功', duration: 1000 });
-                router.replace({ uri: '/pages/index' });
-            }
-        });
+        await bookStorage.removeBook(dirName);
+        prompt.showToast({ message: '删除成功', duration: 1000 });
+        router.replace({ uri: '/pages/index' });
     },
     clearBookshelf() {
         prompt.showToast({ message: '开始删除...', duration: 500 });

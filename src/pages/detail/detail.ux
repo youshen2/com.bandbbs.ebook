@@ -139,7 +139,6 @@
 		preventParagraphSplitting: false,
         saveMode: 'exit',
         saveIntervalValue: 10,
-        saveIntervalId: null,
         alwaysShowTime: false,
 		alwaysShowTimeSensitivity: 50,
 		isNearTopForHd: false
@@ -192,11 +191,6 @@
 	},
 	async onShow(){
 		await this.loadSettings();
-		if (this.saveMode === 'periodic' && !this.saveIntervalId) {
-			this.saveIntervalId = setInterval(() => {
-				this._performSave();
-			}, this.saveIntervalValue * 1000);
-		}
 		this.updateBatteryStatus();
 		if (typeof globalThis.isKeepScreenOn !== 'undefined') {
 			if (this.isKeepScreenOn !== globalThis.isKeepScreenOn) {
@@ -767,12 +761,18 @@
 	saveData(forceImmediate = false){
 		if (this.saveDataTimeout) {
 			clearTimeout(this.saveDataTimeout);
-			this.saveDataTimeout = null;
 		}
 		if (forceImmediate) {
 			this._performSave();
+			this.saveDataTimeout = null;
 		} else {
-             // No-op, saving is handled by timer or on exit
+            if (this.saveMode === 'exit') {
+                return;
+            }
+			this.saveDataTimeout = setTimeout(() => {
+				this._performSave();
+                this.saveDataTimeout = null;
+			}, this.saveIntervalValue * 1000);
 		}
 	},
 	async _performSave() {
@@ -787,6 +787,7 @@
 			progress.scrollOffset = this.currentScrollTop;
 			progress.txtSizePage = this.txtSizePage;
 			progress.fontSize = this.fontSize;
+			progress.lastReadTimestamp = Date.now();
 			
 			await bookStorage.set(this.name, progress);
 			progress = null;
@@ -794,10 +795,6 @@
 		}
 	},
 	async onHide(){
-      if (this.saveIntervalId) {
-          clearInterval(this.saveIntervalId);
-          this.saveIntervalId = null;
-      }
 		if (this.saveDataTimeout) {
 			clearTimeout(this.saveDataTimeout);
 			this.saveDataTimeout = null;
@@ -814,10 +811,6 @@
 		brightness.setKeepScreenOn({ keepScreenOn: false }); 
 	},
 	async onDestroy(){ 
-      if (this.saveIntervalId) {
-          clearInterval(this.saveIntervalId);
-          this.saveIntervalId = null;
-      }
 		if (this.saveDataTimeout) {
 			clearTimeout(this.saveDataTimeout);
 			this.saveDataTimeout = null;

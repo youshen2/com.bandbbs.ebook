@@ -1,0 +1,94 @@
+<template>
+    <div class="page" style="flex-direction: column;">
+      <div class="item">
+        <text static style="font-size: 24px;font-weight:bold;color: rgba(255, 255, 255, 0.6);text-align: center;margin-bottom:80px">开启将自动置顶上次阅读的书籍。</text>
+        <img static src="/common/images/Switch_ON.png" style="width: 113px;height: 80px;" @click="onClick" if="{{enable}}"/>
+        <img static src="/common/images/Switch_OFF.png" style="width: 113px;height: 80px;" @click="onClick" else/>
+        <text style="font-size: 36px;font-weight:bold;color: white;width: 100%;text-align: center;">
+          {{enable ? 'ON' : 'OFF'}}
+        </text>
+      </div>
+      <img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+      <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+        {{nowTime}}
+      </text>
+      <text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+        上次阅读
+      </text>
+    </div>
+  </template>
+  
+  <script>
+  import router from '@system.router'
+  import storage from '../../common/storage.js'
+  
+  export default {
+    private: {
+      enable: true,
+      nowTime: "00:00",
+      timer: null
+    },
+    updateTime() {
+      const date = new Date();
+      let hours = date.getHours();
+      let minutes = date.getMinutes();
+      hours = hours < 10 ? '0' + hours : hours;
+      minutes = minutes < 10 ? '0' + minutes : minutes;
+      this.nowTime = `${hours}:${minutes}`;
+    },
+    onInit() {
+      this.updateTime();
+      this.timer = setInterval(() => {
+        this.updateTime();
+      }, 1000);
+      storage.get({
+        key: 'EBOOK_TOP_LAST_READ',
+        success: (data) => {
+          this.enable = data === 'true';
+        },
+        default: 'true'
+      })
+    },
+    onDestroy(){
+      if (this.timer) {
+        clearInterval(this.timer);
+        this.timer = null;
+      }
+    },
+    back(){
+      router.back();
+    },
+    save(){
+      storage.set({
+        key: 'EBOOK_TOP_LAST_READ',
+        value: this.enable.toString()
+      })
+    },
+    onClick(){
+      this.enable = !this.enable;
+      this.save()
+    }
+  }
+  </script>
+  
+  <style>
+  .page {
+    width: 432px;
+    height: 514px;
+    background-color: #000000;
+  }
+  .item {
+    position: absolute;
+    left: 20px;
+    top: 126px;
+    width: 392px;
+    height: 328px;
+    border-radius: 36px;
+    flex-direction: column;
+    border: 3px solid #262626;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+  }
+  </style>
+  

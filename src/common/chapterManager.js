@@ -1,5 +1,6 @@
 import file from '@system.file';
 import router from '@system.router';
+import runAsyncFunc from '../utils/runAsyncFunc.js';
 
 const bookIndexCache = new Map();
 const chapterChunkCache = new Map();
@@ -32,16 +33,6 @@ async function handleOldVersion(bookName) {
             confirmText: `需要删除数据`,
             cPath: 'internal://files/books/' + bookName
         }
-    });
-}
-
-function runAsyncFunc(fn, options) {
-    return new Promise((resolve, reject) => {
-        fn({
-            ...options,
-            success: resolve,
-            fail: reject,
-        });
     });
 }
 
@@ -241,4 +232,3 @@ export default {
     getTotalChapters,
     getSyncedChapters
 };
-

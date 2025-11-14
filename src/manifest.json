@@ -186,6 +186,15 @@
       },
       "pages/timeSetting": {
         "component": "timeSetting"
+      },
+      "pages/preloadChapterSetting": {
+        "component": "preloadChapterSetting"
+      },
+      "pages/lastReadSetting": {
+        "component": "lastReadSetting"
+      },
+      "pages/checkCoverSetting": {
+        "component": "checkCoverSetting"
       }
     }
   },

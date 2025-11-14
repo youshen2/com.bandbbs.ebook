@@ -15,6 +15,20 @@
                 </div>
                 <img src="/common/images/enter.png" style="width:40px;height: 40px;" static />
             </list-item>
+            <list-item class="item" @click="routerTo('lastReadSetting')" type="item">
+                <div class="item-content">
+                    <text class="itemtext" static>置顶上次阅读</text>
+                    <text class="itemtext2" static>显示上次阅读</text>
+                </div>
+                <img src="/common/images/enter.png" style="width:40px;height: 40px;" static />
+            </list-item>
+            <list-item class="item" @click="routerTo('checkCoverSetting')" type="item">
+                <div class="item-content">
+                    <text class="itemtext" static>检查书籍封面</text>
+                    <text class="itemtext2" static>封面展示优化</text>
+                </div>
+                <img src="/common/images/enter.png" style="width:40px;height: 40px;" static />
+            </list-item>
         </list>
 
 

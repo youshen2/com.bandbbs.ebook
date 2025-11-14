@@ -1,16 +1,51 @@
 import file from '@system.file' 
 
-var storageFile = {}
-const fileSavedPath = 'internal://files/books/storage-api/savedFile'
+let storageCache = null;
+const fileSavedPath = 'internal://files/books/storage-api/savedFile';
+let saveTimeout = null;
 
-storageFile.get = function(param){
-    
-    var func = function(data){
+function loadIfNeeded(callback) {
+    if (storageCache !== null) {
+        callback(storageCache);
+        return;
+    }
+    file.readText({
+        uri: fileSavedPath,
+        success: function(data) {
+            try {
+                storageCache = JSON.parse(data.text);
+            } catch (e) {
+                storageCache = {};
+            }
+            callback(storageCache);
+        },
+        fail: function() {
+            storageCache = {};
+            callback(storageCache);
+        }
+    });
+}
+
+function scheduleSave() {
+    if (saveTimeout) {
+        clearTimeout(saveTimeout);
+    }
+    saveTimeout = setTimeout(() => {
+        file.writeText({
+            uri: fileSavedPath,
+            text: JSON.stringify(storageCache)
+        });
+        saveTimeout = null;
+    }, 500);
+}
+
+function get(param){
+    loadIfNeeded(data => {
         var str = data[param.key];
-        if(!str && param.default){
+        if(str === undefined && param.default !== undefined){
             str = param.default;
         }
-        if(!str){
+        if(str === undefined){
             str = '';
         }
         if(param.success){
@@ -19,88 +54,51 @@ storageFile.get = function(param){
         if(param.complete){
             param.complete();
         }
-    }
-    
-    file.readText({
-      uri: fileSavedPath,
-      success: function(data) {
-          
-        func(JSON.parse(data.text))
-      },
-      fail: function(data, code) {
-          
-        func({})
-      }
-    })
+    });
 }
 
-storageFile.save = function(data,param){
-    file.writeText({
-      uri: fileSavedPath,
-      text: JSON.stringify(data),
-      success: function() {
-          
-          
+function save(data,param){
+    storageCache = data;
+    scheduleSave();
+    if(param.success){
+        param.success();
+    }
+    if(param.complete){
+        param.complete();
+    }
+}
+
+function set(param){
+    loadIfNeeded(data => {
+        data[param.key] = param.value;
+        scheduleSave();
         if(param.success){
             param.success();
         }
         if(param.complete){
             param.complete();
         }
-      },
-      fail: function(data, code) {
-        // console.log(`handling fail, code = ${code}`)
-        if(param.fail){
-            param.fail(data, code);
+    });
+}
+
+function clear(param){
+    storageCache = {};
+    scheduleSave();
+    if (param && param.success) param.success();
+    if (param && param.complete) param.complete();
+}
+
+function del(param){
+    loadIfNeeded(data => {
+        delete data[param.key];
+        scheduleSave();
+        if(param.success) {
+            param.success();
         }
-        if(param.complete){
+        if(param.complete) {
             param.complete();
         }
-      }
-    })
+    });
 }
 
-storageFile.set = function(param){
-    var func = function(data){
-        data[param.key] = param.value;
-        storageFile.save(data,param);
-    }
-    
-    file.readText({
-      uri: fileSavedPath,
-      success: function(data) {
-          
-        func(JSON.parse(data.text))
-      },
-      fail: function(data, code) {
-          
-        func({})
-      }
-    })
-}
-
-storageFile.clear = function(param){
-    var data = {};
-    storageFile.save(data,param);
-}
-
-storageFile.delete = function(param){
-    var func = function(data){
-        delete data[param.key];
-        storageFile.save(data,param);
-    }
-    file.readText({
-      uri: fileSavedPath,
-      success: function(data) {
-          
-        func(JSON.parse(data.text))
-      },
-      fail: function(data, code) {
-          
-        func({})
-      }
-    })
-}
-
-// var storage = storageFile
-export default storageFile
+export default { get, set, clear, delete: del, save };

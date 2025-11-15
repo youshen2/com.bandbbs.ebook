@@ -108,6 +108,7 @@ export default {
                 await bookStorage.set(this.bookName, progress);
                 progress = null;
                 prompt.showToast({ message: '保存成功' });
+                globalThis.bookmarkEdited = { bookName: this.bookName, index: this.bookmarkIndex, newName: this.textValue };
                 router.back();
             } else {
                 progress = null;

@@ -1,0 +1,43 @@
+<template>
+	<div class="page">
+    <scroll scroll-y="{{true}}" bounces="{{true}}" style="position: absolute;left:0;top:50px;width: 432px;height: 412px;">
+      <img static src="/common/images/about_calculator.png" style="width: 100%;position: absolute;left: 48px;top: 0px;"/>
+
+      <text style="position: absolute;left: 74px;top: 184px;width: 204px;height: 48px;font-size: 36px;font-weight: bold;color: rgba(255, 255, 255, 0.6);">
+        {{displayVersion}}
+      </text>
+      <text style="position: absolute;left: 74px;top: 226px;width: 282px;height: 36px;font-size: 24px;font-weight: bold;color: rgba(255, 255, 255, 0.4);">
+        {{versionType}}
+      </text>
+    </scroll>
+    <img static src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 102px;" />
+    <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">{{nowTime}}</text>
+    <text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">关于</text>
+    <img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+	</div>
+  </template>
+
+<script>
+import router from '@system.router'
+export default {
+  private: { nowTime: '' },
+  onShow() {
+    const d = new Date()
+    const hh = String(d.getHours()).padStart(2,'0')
+    const mm = String(d.getMinutes()).padStart(2,'0')
+    this.nowTime = `${hh}:${mm}`
+  },
+  back() {
+    try { this.onVibrate && this.onVibrate() } catch(e) {}
+    router.back()
+  }
+}
+</script>
+
+<style>
+.page { width: 432px; height: 514px; background-color: #000000; }
+.title { position:absolute; left:0; top:16px; width:432px; line-height:32px; font-size:24px; color:white; text-align:center; }
+.content { position:absolute; top:122px; left:20px; width:392px; flex-direction:column; align-items:center; justify-content:flex-start; }
+.illustration { width: 200px; height: 200px; margin-bottom: 16px; }
+.text { color: #ffffff; font-size: 20px; width: 100%; text-align: center; }
+</style>

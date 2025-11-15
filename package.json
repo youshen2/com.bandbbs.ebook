@@ -24,6 +24,7 @@
     "chrome 65"
   ],
   "dependencies": {
-    "@aiot-toolkit/jsc": "^1.0.7"
+    "@aiot-toolkit/jsc": "^1.0.7",
+    "math-expression-evaluator": "^2.0.7"
   }
 }

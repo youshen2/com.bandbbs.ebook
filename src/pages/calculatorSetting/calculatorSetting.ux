@@ -2,63 +2,21 @@
 	<div class="page" style="flex-direction: column;">
   
 	<list class="list">
-		<list-item class="item" @click="routerTo('readingSetting')" type="item">
-			<div class="item-content">
-				<text class="itemtext" static>阅读设置</text>
-				<text class="itemtext2" static>字体、亮度等</text>
-			</div>
-			<img src="/common/images/enter.png" style="width:40px;height: 40px;" static/>
-		</list-item>
-		<list-item class="item" @click="routerTo('performanceSetting')" type="item">
-			<div class="item-content">
-				<text class="itemtext" static>性能设置</text>
-				<text class="itemtext2" static>分段大小等</text>
-			</div>
-			<img src="/common/images/enter.png" style="width:40px;height: 40px;" static/>
-		</list-item>
-		  <list-item class="item" @click="routerTo('shelfSetting')" type="item">
+      <list-item class="item" @click="routerTo('vibrationSetting')" type="item">
 			  <div class="item-content">
-				  <text class="itemtext" static>书架设置</text>
-				  <text class="itemtext2" static>书架样式等</text>
-			  </div>
-			  <img src="/common/images/enter.png" style="width:40px;height: 40px;" static/>
-		  </list-item>
-		  <list-item class="item" @click="routerTo('interactionSetting')" type="item">
-			  <div class="item-content">
-				  <text class="itemtext" static>交互设置</text>
-				  <text class="itemtext2" static>手势、按键等</text>
-			  </div>
-			  <img src="/common/images/enter.png" style="width:40px;height: 40px;" static/>
-		  </list-item>
-		  <list-item class="item" @click="clearBooks" type="item">
-			  <div class="item-content">
-				  <text class="itemtext" static>清空数据</text>
-				  <text class="itemtext2" static>清空全部数据</text>
+				  <text class="itemtext" static>震动</text>
+				  <text class="itemtext2" static>切换震动模式</text>
 			  </div>
 			  <img src="/common/images/enter.png" style="width:40px;height: 40px;" static />
 		  </list-item>
-		  <list-item class="item" @click="routerTo('tutorial')" type="item">
+		  <list-item class="item" @click="routerTo('calculatorHistory')" type="item">
 			  <div class="item-content">
-				  <text class="itemtext" static>教程中心</text>
-				  <text class="itemtext2" static>查看应用使用教程</text>
+				  <text class="itemtext" static>历史记录</text>
+				  <text class="itemtext2" static>查看计算历史</text>
 			  </div>
 			  <img src="/common/images/enter.png" style="width:40px;height: 40px;" static />
 		  </list-item>
-		  <list-item class="item" @click="routerTo('push')" type="item">
-			  <div class="item-content">
-				  <text class="itemtext" static>书籍同步</text>
-				  <text class="itemtext2" static>连接手机同步内容</text>
-			  </div>
-			  <img src="/common/images/enter.png" style="width:40px;height: 40px;" static />
-		  </list-item>
-		  <list-item class="item" @click="routerTo('change_chapter')" type="item">
-			  <div class="item-content">
-				  <text class="itemtext" static>换章设置</text>
-				  <text class="itemtext2" static>章节切换逻辑</text>
-			  </div>
-			  <img src="/common/images/enter.png" style="width:40px;height: 40px;" static />
-		  </list-item>
-		  <list-item class="item" @click="routerTo('about')" type="item">
+      <list-item class="item" @click="routerTo('about_calculator')" type="item">
 			  <div class="item-content">
 				  <text class="itemtext" static>关于</text>
 				  <text class="itemtext2" static>关于电子书</text>

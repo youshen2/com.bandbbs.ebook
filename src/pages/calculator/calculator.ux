@@ -1,6 +1,8 @@
 <template>
   <div class="page" style="flex-direction: column;" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
     <img static src="/common/images/hd.png" style="position: absolute;left: 0px;top: 0px;width: 432px;height: 102px;" />
+    <img static src="/common/images/back.png" @click="exit" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+    <img static src="/common/images/more.png" @click="openSettings" style="position: absolute;left: 322px;top: 24px;width: 82px;height: 82px;"/>
     <text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
       {{nowTime}}
     </text>
@@ -55,7 +57,31 @@
         <div class="key" clickable="true" @click="pressFunc('sin')"><text class="key-label">sin</text></div>
         <div class="key" clickable="true" @click="pressFunc('cos')"><text class="key-label">cos</text></div>
         <div class="key" clickable="true" @click="pressFunc('tan')"><text class="key-label">tan</text></div>
-        <div class="key" clickable="true" @click="pressFunc('log')"><text class="key-label">log</text></div>
+        <div class="key" clickable="true" @click="pressFunc('lg')"><text class="key-label">lg</text></div>
+      </div>
+      <div class="row" if="isSci">
+        <div class="key" clickable="true" @click="pressFunc('asin')"><text class="key-label">asin</text></div>
+        <div class="key" clickable="true" @click="pressFunc('acos')"><text class="key-label">acos</text></div>
+        <div class="key" clickable="true" @click="pressFunc('atan')"><text class="key-label">atan</text></div>
+        <div class="key" clickable="true" @click="pressFunc('ln')"><text class="key-label">ln</text></div>
+      </div>
+      <div class="row" if="isSci">
+        <div class="key" clickable="true" @click="pressFunc('sinh')"><text class="key-label">sinh</text></div>
+        <div class="key" clickable="true" @click="pressFunc('cosh')"><text class="key-label">cosh</text></div>
+        <div class="key" clickable="true" @click="pressFunc('tanh')"><text class="key-label">tanh</text></div>
+        <div class="key" clickable="true" @click="pressFunc('asinh')"><text class="key-label">asinh</text></div>
+      </div>
+      <div class="row" if="isSci">
+        <div class="key" clickable="true" @click="toggleAngle"><text class="key-label">{{degMode ? 'DEG' : 'RAD'}}</text></div>
+        <div class="key" clickable="true" @click="pressHelp"><text class="key-label">?</text></div>
+        <div class="key" style="opacity:0"><text class="key-label">&nbsp;</text></div>
+        <div class="key" style="opacity:0"><text class="key-label">&nbsp;</text></div>
+      </div>
+      <div class="row" if="isSci">
+        <div class="key" clickable="true" @click="pressFunc('acosh')"><text class="key-label">acosh</text></div>
+        <div class="key" clickable="true" @click="pressFunc('atanh')"><text class="key-label">atanh</text></div>
+        <div class="key" clickable="true" @click="pressPow"><text class="key-label">^</text></div>
+        <div class="key" clickable="true" @click="pressFactorial"><text class="key-label">!</text></div>
       </div>
       <div class="row" if="isSci">
         <div class="key" clickable="true" @click="pressToggleSci"><text class="key-label">普通</text></div>
@@ -70,15 +96,17 @@
 
 <script>
 import router from '@system.router'
-import timeTicker from '../../common/timeTicker.js'
 import vibrator from '@system.vibrator'
 import storage from '../../common/storage.js'
 import { KEYS } from '../../common/keys.js'
+const Mexp = require('math-expression-evaluator')
 
 export default {
   private: {
     nowTime: '00:00',
     unsubscribeTick: null,
+    timer: null,
+    timeFormat: '24h',
     display: '0',
     current: '',
     hasDot: false,
@@ -90,15 +118,20 @@ export default {
     clearLabel: 'AC',
     swipeStartX: null,
     swipeEndX: null,
-    vibrateEnabled: true
+    vibrateEnabled: true,
+    degMode: false
+  },
+  openSettings() {
+    this.onVibrate();
+    router.push({ uri: '/pages/calculatorSetting' });
+  },
+  exit() {
+    this.onVibrate();
+    try { router.back(); } catch (e) {}
   },
   onInit() {
-    timeTicker.start();
-    this.unsubscribeTick = timeTicker.subscribe(({ hours, minutes }) => {
-      const hh = hours < 10 ? '0' + hours : hours;
-      const mm = minutes < 10 ? '0' + minutes : minutes;
-      this.nowTime = `${hh}:${mm}`;
-    });
+    this.updateTime();
+    this.timer = setInterval(() => this.updateTime(), 1000);
     this.updateClearLabel();
     // 读取震动开关
     storage.get({
@@ -109,6 +142,22 @@ export default {
         }
       }
     });
+  },
+  updateTime() {
+    const d = new Date();
+    let h = d.getHours();
+    let m = d.getMinutes();
+    if (this.timeFormat === '12h') {
+      const ampm = h >= 12 ? '下午' : '上午';
+      h = h % 12;
+      h = h ? h : 12;
+      m = m < 10 ? ('0' + m) : m;
+      this.nowTime = `${ampm} ${h}:${m}`;
+    } else {
+      const hh = h < 10 ? ('0' + h) : h;
+      const mm = m < 10 ? ('0' + m) : m;
+      this.nowTime = `${hh}:${mm}`;
+    }
   },
   onShow() {
     // 返回页面时刷新震动开关状态
@@ -151,9 +200,8 @@ export default {
     const deltaX = this.swipeEndX - this.swipeStartX;
     this.swipeStartX = null;
     this.swipeEndX = null;
-    // Detect left swipe with threshold
-    if (deltaX < -60) {
-      router.push({ uri: '/pages/jisuanqi' });
+    if (deltaX > 60) {
+      router.push({ uri: '/pages/about_calculator' });
     }
   },
   pressConst(name) {
@@ -192,10 +240,7 @@ export default {
     this.updateClearLabel();
   },
   onDestroy() {
-    if (this.unsubscribeTick) {
-      try { this.unsubscribeTick(); } catch (e) {}
-      this.unsubscribeTick = null;
-    }
+    if (this.timer) { try { clearInterval(this.timer); } catch (e) {} this.timer = null }
   },
   pressDigit(d) {
     this.onVibrate();
@@ -250,9 +295,15 @@ export default {
       this.current = '';
       this.hasDot = false;
     }
-    // if last token is operator, replace it
+    // if last token is operator, replace it; do not replace brackets or function names
     if (this.tokens.length > 0 && typeof this.tokens[this.tokens.length - 1] === 'string') {
-      this.tokens[this.tokens.length - 1] = op;
+      const lastTok = this.tokens[this.tokens.length - 1];
+      const isOperator = lastTok === '＋' || lastTok === '−' || lastTok === '×' || lastTok === '÷' || lastTok === '^';
+      if (isOperator) {
+        this.tokens[this.tokens.length - 1] = op;
+      } else {
+        this.tokens.push(op);
+      }
     } else {
       this.tokens.push(op);
     }
@@ -277,18 +328,42 @@ export default {
       else if (t === ')') balance--;
     }
     while (balance > 0) { this.tokens.push(')'); balance--; }
-    // trim trailing operator
-    if (this.tokens.length > 0 && typeof this.tokens[this.tokens.length - 1] === 'string') {
-      this.tokens.pop();
+    // trim trailing operator only
+    if (this.tokens.length > 0) {
+      const last = this.tokens[this.tokens.length - 1];
+      if (typeof last === 'string' && (last === '＋' || last === '−' || last === '×' || last === '÷' || last === '^' || last === '!')) {
+        this.tokens.pop();
+      }
     }
+    const exprString = this.formatTokensForDisplay(false);
     const result = this.evaluateTokens(this.tokens);
     if (result === null || !isFinite(result)) {
       this.display = '错误';
       this.tokens = [];
       return;
     }
+    this.recordHistory(exprString, this.formatNumber(result));
     this.display = this.formatNumber(result);
     this.tokens = [result];
+    this.updateClearLabel();
+  },
+  toggleAngle() {
+    this.onVibrate();
+    this.degMode = !this.degMode;
+  },
+  pressPow() {
+    this.pressOp('^');
+  },
+  pressFactorial() {
+    this.onVibrate();
+    if (this.current !== '' && this.current !== null) {
+      const num = parseFloat(this.current);
+      if (!Number.isNaN(num)) this.tokens.push(num);
+      this.current = '';
+      this.hasDot = false;
+    }
+    this.tokens.push('!');
+    this.display = this.formatTokensForDisplay();
     this.updateClearLabel();
   },
   pressClear() {
@@ -396,67 +471,143 @@ export default {
     if (s.length > 12) return Number(n.toFixed(8)).toString();
     return s;
   },
-  // Shunting-yard for + - × ÷ and functions with parentheses
+  recordHistory(expr, res) {
+    try {
+      storage.get({
+        key: KEYS.CALC_HISTORY,
+        success: (data) => {
+          let list = [];
+          if (Array.isArray(data)) list = data; else if (typeof data === 'string' && data) {
+            try { list = JSON.parse(data); } catch (e) { list = []; }
+          }
+          list.unshift({ expr, res, ts: Date.now() });
+          if (list.length > 50) list = list.slice(0, 50);
+          storage.set({ key: KEYS.CALC_HISTORY, value: list });
+        }
+      });
+    } catch (e) {}
+  },
   evaluateTokens(tokens) {
     if (!tokens || tokens.length === 0) return 0;
+    const mapOps = { '＋': '+', '−': '-', '×': '*', '÷': '/' };
+    let expr = '';
+    for (const t of tokens) {
+      if (typeof t === 'number') expr += String(t);
+      else if (mapOps[t]) expr += mapOps[t];
+      else if (t === '√') expr += 'sqrt';
+      else expr += t;
+    }
+    function wrapArg(src, fn, mul) {
+      let out = '';
+      for (let i = 0; i < src.length; ) {
+        if (src.startsWith(fn + '(', i)) {
+          let j = i + fn.length + 1, depth = 1;
+          while (j < src.length && depth > 0) {
+            const ch = src[j];
+            if (ch === '(') depth++;
+            else if (ch === ')') depth--;
+            j++;
+          }
+          const inner = src.substring(i + fn.length + 1, j - 1);
+          out += fn + '(' + '(' + inner + ')*' + mul + ')';
+          i = j;
+        } else { out += src[i]; i++; }
+      }
+      return out;
+    }
+    function replaceFn(src, fn, builder) {
+      let out = '';
+      for (let i = 0; i < src.length; ) {
+        if (src.startsWith(fn + '(', i)) {
+          let j = i + fn.length + 1, depth = 1;
+          while (j < src.length && depth > 0) {
+            const ch = src[j];
+            if (ch === '(') depth++;
+            else if (ch === ')') depth--;
+            j++;
+          }
+          const inner = src.substring(i + fn.length + 1, j - 1);
+          out += builder(inner);
+          i = j;
+        } else { out += src[i]; i++; }
+      }
+      return out;
+    }
+    const PI = '3.141592653589793';
+    // base-10 log via natural log
+    expr = replaceFn(expr, 'lg', (inner) => '(ln(' + inner + '))/ln(10)');
+    // hyperbolic (use natural log for inverses)
+    expr = replaceFn(expr, 'sinh', (inner) => '((exp(' + inner + ')-exp(-(' + inner + ')))/2)');
+    expr = replaceFn(expr, 'cosh', (inner) => '((exp(' + inner + ')+exp(-(' + inner + ')))/2)');
+    expr = replaceFn(expr, 'tanh', (inner) => '((exp(' + inner + ')-exp(-(' + inner + ')))/(exp(' + inner + ')+exp(-(' + inner + '))))');
+    expr = replaceFn(expr, 'asinh', (inner) => 'ln((' + inner + ')+sqrt((' + inner + ')*(' + inner + ')+1))');
+    expr = replaceFn(expr, 'acosh', (inner) => 'ln((' + inner + ')+sqrt((' + inner + ')*(' + inner + ')-1))');
+    expr = replaceFn(expr, 'atanh', (inner) => '((1/2)*ln((1+(' + inner + '))/(1-(' + inner + '))))');
+    if (this.degMode) {
+      expr = wrapArg(expr, 'sin', PI + '/180');
+      expr = wrapArg(expr, 'cos', PI + '/180');
+      expr = wrapArg(expr, 'tan', PI + '/180');
+      expr = replaceFn(expr, 'asin', (inner) => '(asin(' + inner + '))*180/' + PI);
+      expr = replaceFn(expr, 'acos', (inner) => '(acos(' + inner + '))*180/' + PI);
+      expr = replaceFn(expr, 'atan', (inner) => '(atan(' + inner + '))*180/' + PI);
+    }
+    try {
+      const v = Mexp.eval(expr);
+      return (typeof v === 'number' && isFinite(v)) ? v : null;
+    } catch (e) {
+      const alt = this.basicEval(tokens);
+      return (typeof alt === 'number' && isFinite(alt)) ? alt : null;
+    }
+  }
+  ,basicEval(tokens) {
+    const prec = { '＋': 1, '−': 1, '×': 2, '÷': 2, '^': 3 };
+    const isOp = (x) => x === '＋' || x === '−' || x === '×' || x === '÷' || x === '^';
     const ops = [];
     const out = [];
-    const prec = { '＋': 1, '−': 1, '×': 2, '÷': 2 };
-    const isOp = (x) => x === '＋' || x === '−' || x === '×' || x === '÷';
-    const isFunc = (x) => x === 'sin' || x === 'cos' || x === 'tan' || x === 'log' || x === '√';
-    const applyOp = () => {
-      const op = ops.pop();
-      if (isOp(op)) {
-        const b = out.pop();
-        const a = out.pop();
-        if (typeof a !== 'number' || typeof b !== 'number') return out.push(NaN);
-        switch (op) {
-          case '＋': out.push(a + b); break;
-          case '−': out.push(a - b); break;
-          case '×': out.push(a * b); break;
-          case '÷': out.push(b === 0 ? NaN : a / b); break;
-          default: out.push(NaN);
-        }
-      } else if (isFunc(op)) {
-        const a = out.pop();
-        if (typeof a !== 'number') return out.push(NaN);
-        switch (op) {
-          case 'sin': out.push(Math.sin(a)); break;
-          case 'cos': out.push(Math.cos(a)); break;
-          case 'tan': out.push(Math.tan(a)); break;
-          case 'log': {
-            const lg = Math.log10 ? Math.log10(a) : Math.log(a) / Math.log(10);
-            out.push(lg);
-            break;
-          }
-          case '√': out.push(a < 0 ? NaN : Math.sqrt(a)); break;
-          default: out.push(NaN);
-        }
-      }
-    };
     for (const t of tokens) {
       if (typeof t === 'number') {
         out.push(t);
-      } else if (isFunc(t)) {
-        ops.push(t);
       } else if (t === '(') {
         ops.push(t);
       } else if (t === ')') {
-        while (ops.length && ops[ops.length - 1] !== '(') applyOp();
+        while (ops.length && ops[ops.length - 1] !== '(') {
+          out.push(ops.pop());
+        }
         if (ops.length && ops[ops.length - 1] === '(') ops.pop();
-        if (ops.length && isFunc(ops[ops.length - 1])) applyOp();
       } else if (isOp(t)) {
-        while (ops.length && isOp(ops[ops.length - 1]) && prec[ops[ops.length - 1]] >= prec[t]) applyOp();
+        while (ops.length && isOp(ops[ops.length - 1]) && prec[ops[ops.length - 1]] >= prec[t]) {
+          out.push(ops.pop());
+        }
         ops.push(t);
+      } else {
+        return null;
       }
     }
     while (ops.length) {
-      if (ops[ops.length - 1] === '(') return null; // unmatched
-      applyOp();
+      if (ops[ops.length - 1] === '(') return null;
+      out.push(ops.pop());
     }
-    const res = out.pop();
-    if (res === undefined || Number.isNaN(res)) return null;
-    return res;
+    const st = [];
+    for (const t of out) {
+      if (typeof t === 'number') {
+        st.push(t);
+      } else if (isOp(t)) {
+        const b = st.pop();
+        const a = st.pop();
+        if (!isFinite(a) || !isFinite(b)) return null;
+        switch (t) {
+          case '＋': st.push(a + b); break;
+          case '−': st.push(a - b); break;
+          case '×': st.push(a * b); break;
+          case '÷': st.push(b === 0 ? NaN : a / b); break;
+          case '^': st.push(Math.pow(a, b)); break;
+        }
+      } else {
+        return null;
+      }
+    }
+    const res = st.pop();
+    return (res === undefined || Number.isNaN(res)) ? null : res;
   }
 }
 </script>

@@ -1,0 +1,181 @@
+<template>
+	<div class="page" style="flex-direction: column;">
+
+	  <list class="list">
+
+		  <list-item class="item {{onSelect==1?'item2':''}}" @click="select('1')" type="item">
+			<div class="item-content">
+				<text class="itemtext" static>北尘方案</text>
+				<text class="itemtext2" static>提高阅读流畅性</text>
+			</div>
+			  <img src="/common/images/check.png" style="width:40px;height: 40px;" if="{{onSelect==1}}"/>
+		  </list-item>
+
+		  <list-item class="item {{onSelect==2?'item2':''}}" @click="select('2')" type="item">
+			<div class="item-content">
+				<text class="itemtext" static>爅峫方案</text>
+				<text class="itemtext2" static>可能造成顿挫感</text>
+			</div>
+			<img src="/common/images/check.png" style="width:40px;height: 40px;" if="{{onSelect==2}}"/>
+		  </list-item>
+
+	  </list>
+	  <text style="position: absolute;top:-100px;left:0px;">{{txtNum}}</text>
+
+		<img static src="/common/images/back.png" @click="back" style="position: absolute;left: 38px;top: 24px;width: 82px;height: 82px;"/>
+		<text style="position: absolute;left: 130px;top: 16px;width: 172px;line-height: 32px;font-weight:bold;font-size:24px;color:rgba(255,255,255,0.6);text-align:center;">
+		  {{nowTime}}
+		</text>
+		<text static style="position: absolute;left: 130px;top: 46px;width: 172px;line-height: 42px;font-weight:bold;font-size:32px;color:white;text-align:center;">
+			换章设置
+		</text>
+	</div>
+  </template>
+
+  <script>
+  import router from '@system.router'
+  import storage from '../../common/storage.js'
+  import app from '@system.app'
+  import prompt from '@system.prompt'
+  import vibrator from '@system.vibrator'
+  import { KEYS } from '../../common/keys.js'
+
+  export default {
+	private: {
+		onSelect:1,
+		txtNum:0,
+		nowTime: "00:00",
+		timer: null
+	},
+	protected: {
+	  cPath: '',
+		name: ''
+	},
+	updateTime() {
+		const date = new Date();
+		let hours = date.getHours();
+		let minutes = date.getMinutes();
+
+		hours = hours < 10 ? '0' + hours : hours;
+		minutes = minutes < 10 ? '0' + minutes : minutes;
+
+		this.nowTime = `${hours}:${minutes}`;
+	},
+	onInit() {
+		this.updateTime();
+		this.timer = setInterval(() => {
+			this.updateTime();
+		}, 1000);
+	},
+	onDestroy(){
+		if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+	},
+  onShow(){
+      storage.get({
+        key: 'EBOOK_CHAPTER_SWITCH_STYLE',
+        success: (data) => {
+          if (data === 'overlay') {
+            this.onSelect = 1
+          } else {
+            this.onSelect = 2
+          }
+        },
+        fail: () => {
+          this.onSelect = 1
+        }
+      })
+  },
+  onBackPress(){
+    this.back();
+    return true;
+  },
+
+  select(fun){
+    if (fun === '1') {
+      if (this.onSelect !== 1) {
+        this.onSelect = 1
+        storage.set({ key: 'EBOOK_CHAPTER_SWITCH_STYLE', value: 'overlay' })
+      }
+    } else {
+      if (this.onSelect !== 2) {
+        this.onSelect = 2
+        storage.set({ key: 'EBOOK_CHAPTER_SWITCH_STYLE', value: 'button' })
+      }
+    }
+  },
+
+	routerTo(url) {
+	  router.push({
+		uri: '/pages/' + url
+	  })
+	},
+	back(){
+		router.back();
+	},
+  exit(){
+      app.terminate();
+  },
+  updateScene(){
+  }
+  }
+  </script>
+  <style>
+  .page {
+	  width: 432px;
+	  height: 514px;
+	  background-color: #000000;
+  }
+  .list {
+	width: 432px;
+	height: 514px;
+	position: absolute;
+	top:0px;
+	left:0px;
+  padding: 116px 12px;
+}
+
+.item {
+	width: 100%;
+	height: 112px;
+	padding: 14px 20px;
+	margin-bottom: 8px;
+	background-color: #262626;
+	border-radius: 36px;
+	align-items: center;
+  justify-content: space-between;
+}
+
+.item2 {
+	background-color: #0D6EFF;
+}
+
+.itemtext {
+	font-size: 32px;
+	line-height:40px;
+	width: 100%;
+	font-weight: bold;
+	color: white;
+	text-overflow: ellipsis;
+	lines: 1;
+}
+
+.itemtext2 {
+	font-size: 28px;
+	line-height: 37px;
+	font-weight: bold;
+	color: rgba(255,255,255,0.6);
+	text-overflow: ellipsis;
+	lines: 1;
+}
+
+
+.item-content {
+	height: 100%;
+	flex:1;
+	flex-direction: column;
+	justify-content: space-between;
+}
+  </style>

@@ -114,6 +114,10 @@
   
 	},
 	onShow(){
+		if (globalThis.justJumpedFromChapter || globalThis.justJumpedFromBookmark || globalThis.justJumpedFromPageNumber) {
+			router.back();
+			return;
+		}
 		if (typeof globalThis.isKeepScreenOn !== 'undefined') {
 			this.isKeepScreenOn = globalThis.isKeepScreenOn;
 		}
